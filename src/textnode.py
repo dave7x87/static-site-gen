@@ -1,24 +1,21 @@
 from enum import Enum
+from dataclasses import dataclass
+from typing import Optional
 
 class TextType(Enum):
-    plain = "plain text"
-    bold = "bold text"
-    italic = "italic text"
-    code = "code text"
+    plain = "plain"
+    bold = "bold"
+    italic = "italic"
+    code = "code"
     link = "link"
     image = "image"
 
+@dataclass
 class TextNode:
-    def __init__(self, text : str, text_type: TextType, url :str = None):
-        self.text = text
-        self.text_type = text_type
-        self.url = url
+    text: str
+    text_type: TextType
+    url: Optional[str] = None
 
-    def __eq__(self, other: TextType):
-        return (self.text == other.text and
-                self.text_type == other.text_type and
-                self.url == other.url)
-    
     def __repr__(self):
         return f"TextNode({self.text}, {self.text_type.value}, {self.url})"
     

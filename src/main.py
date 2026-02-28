@@ -2,6 +2,7 @@ from textnode import TextNode, TextType
 
 def main():
     dummy = TextNode("dummy text", TextType.plain)
-    print (dummy)
+    print(dummy)
 
-main()
+if __name__ == "__main__":
+    main()
