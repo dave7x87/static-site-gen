@@ -3,12 +3,12 @@ from dataclasses import dataclass
 from typing import Optional
 
 class TextType(Enum):
-    plain = "plain"
-    bold = "bold"
-    italic = "italic"
-    code = "code"
-    link = "link"
-    image = "image"
+    PLAIN = "plain"
+    BOLD = "bold"
+    ITALIC = "italic"
+    CODE = "code"
+    LINK = "link"
+    IMAGE = "image"
 
 @dataclass
 class TextNode:
