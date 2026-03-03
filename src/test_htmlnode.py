@@ -12,7 +12,7 @@ class TestHTMLNode(unittest.TestCase):
     def test_no_children(self):
         self.assertEqual(None, HTMLNode().children)
 
-    def test_repr(self):
+    def test_empty_repr(self):
         expected = "HTMLNode(tag=None, value=None, children=None, props=None)"
         self.assertEqual(expected, repr(HTMLNode()))
 
@@ -114,7 +114,7 @@ class TestLeafNode(unittest.TestCase):
                                     "Leaf Node MUST have a value"):
             LeafNode("p", None).to_html()
 
-    def test_parent_repr(self):
+    def test_leaf_repr_correct_from_parent(self):
         child1 = LeafNode(tag="p", value="Child_text")
         child2 = HTMLNode()
         children = [child1, child2]
@@ -163,35 +163,37 @@ class TestParentNode(unittest.TestCase):
             ValueError,
             "ParentNode must have tag"
             ):
-            ParentNode(None,[]).to_html()
+            child = LeafNode("b", "text")
+            node = ParentNode(None,[child])
 
     def test_empty_tag(self):
         with self.assertRaisesRegex(
             ValueError,
             "ParentNode must have tag"
             ):
-            ParentNode("",[]).to_html()
+            child = LeafNode("b", "text")
+            node = ParentNode("",[child])
 
     def test_no_children(self):
         with self.assertRaisesRegex(
             ValueError,
             "ParentNode must have list of children"
             ):
-            ParentNode("b", None).to_html()
+            node = ParentNode("b", None)
 
     def test_empty_children(self):
         with self.assertRaisesRegex(
             ValueError,
             "ParentNode must have list of children"
             ):
-            ParentNode("b", []).to_html()
+            node = ParentNode("b", [])
 
     def test_unlisted_children(self):
         with self.assertRaisesRegex(
             ValueError,
             "ParentNode must have list of children"
             ):
-            ParentNode("b", LeafNode(None, None)).to_html()
+            node = ParentNode("b", LeafNode(None, None))
 
 
 if __name__ == "__main__":

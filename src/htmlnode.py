@@ -108,17 +108,20 @@ class ParentNode(HTMLNode):
                          children=children,
                          props=props
                          )
+        self._validate()
+        
+    def _validate(self):
+        '''screens for empty/none inputs
+        Used at initialisation time and also at use time
+        to meet spec and guard against outside mutation'''
+
+        if not self.tag:
+            raise ValueError("ParentNode must have tag")
+        if not isinstance(self.children, list) or len(self.children) == 0:
+            raise ValueError("ParentNode must have list of children")
         
     def to_html(self):
-        if (self.tag is None
-            or self.tag == ""
-            ):
-            raise ValueError("ParentNode must have tag")
-        if (self.children is None
-            or not(isinstance(self.children, list))
-            or len(self.children) == 0
-            ):
-            raise ValueError("ParentNode must have list of children")
+        self._validate()
         
         components = []
 
