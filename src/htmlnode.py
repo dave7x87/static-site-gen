@@ -2,6 +2,9 @@ from __future__ import annotations
 from html import escape
 
 class HTMLNode:
+    #use flag to maintain __repr__ consistency for leafnode
+    include_children = True
+    
     def __init__(self,
                  tag: str | None = None,
                  value: str | None = None,
@@ -26,10 +29,15 @@ class HTMLNode:
                             for k,v in self.props.items())}"
     
     def __repr__(self):
+        child_text = (f"children={self.children!r}, "
+                      if self.include_children
+                      else ""
+                      )
+        
         output = (f"{type(self).__name__}"
                   f"(tag={self.tag!r}, "
                   f"value={self.value!r}, "
-                  f"children={self.children!r}, "
+                  f"{child_text}"
                   f"props={self.props!r})"
         )
         return output
@@ -61,3 +69,28 @@ class HTMLNode:
 
         # Join and return
         return "\n".join(lines)
+    
+class LeafNode(HTMLNode):
+    #LeafNodes cannot include children, so block them in __repr__ output
+    include_children = False
+    
+    def __init__(self, tag, value, props = None):
+        super().__init__(tag = tag,
+                         value = value,
+                         props = props
+                         )
+
+    def to_html(self):
+        if self.value is None:
+            raise ValueError("Leaf Node MUST have a value")
+        
+        if self.tag is None:
+            return self.value
+        
+        else:
+            return (f"<{self.tag}>"
+                    f"{self.value}"
+                    f"{self.props_to_html()}"
+                    f"</{self.tag}>"
+            )
+

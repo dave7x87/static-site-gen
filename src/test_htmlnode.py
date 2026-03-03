@@ -1,6 +1,6 @@
 import unittest
 
-from htmlnode import HTMLNode
+from htmlnode import HTMLNode, LeafNode
 
 class TestHTMLNode(unittest.TestCase):
     def test_blank_tag(self):
@@ -64,6 +64,21 @@ class TestHTMLNode(unittest.TestCase):
         # Strings are wrapped in quotes because of the !r flag
         expected = "HTMLNode(tag='p', value='Hello', children=None, props={'class': 'greeting'})"
         self.assertEqual(repr(node), expected)
+
+class TestLeafNode(unittest.TestCase):
+    def test_leaf_to_html_p(self):
+        node = LeafNode("p", "Hello, world!")
+        self.assertEqual(node.to_html(), "<p>Hello, world!</p>")
+
+    def test_repr(self):
+        '''confirm that children are not included in LeafNode __repr__'''
+        # Verifying  !r formatting in __repr__
+        node = LeafNode(tag="p", value="Hello", props={"class": "greeting"})
+        # Strings are wrapped in quotes because of the !r flag
+        expected = "LeafNode(tag='p', value='Hello', props={'class': 'greeting'})"
+        self.assertEqual(repr(node), expected)
+
+
 
 if __name__ == "__main__":
     unittest.main()
