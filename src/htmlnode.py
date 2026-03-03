@@ -2,9 +2,6 @@ from __future__ import annotations
 from html import escape
 
 class HTMLNode:
-    #use flag to maintain __repr__ consistency for leafnode
-    include_children = True
-    
     def __init__(self,
                  tag: str | None = None,
                  value: str | None = None,
@@ -29,15 +26,10 @@ class HTMLNode:
                             for k,v in self.props.items())}"
     
     def __repr__(self):
-        child_text = (f"children={self.children!r}, "
-                      if self.include_children
-                      else ""
-                      )
-        
         output = (f"{type(self).__name__}"
                   f"(tag={self.tag!r}, "
                   f"value={self.value!r}, "
-                  f"{child_text}"
+                  f"children={self.children!r}, "
                   f"props={self.props!r})"
         )
         return output
@@ -71,9 +63,7 @@ class HTMLNode:
         return "\n".join(lines)
     
 class LeafNode(HTMLNode):
-    #LeafNodes cannot include children, so block them in __repr__ output
-    include_children = False
-    
+
     def __init__(self, tag, value, props = None):
         super().__init__(tag = tag,
                          value = value,
@@ -88,9 +78,17 @@ class LeafNode(HTMLNode):
             return self.value
         
         else:
-            return (f"<{self.tag}>"
+            return (f"<{self.tag}"
+                    f"{self.props_to_html()}>"
                     f"{self.value}"
-                    f"{self.props_to_html()}"
                     f"</{self.tag}>"
             )
 
+    def __repr__(self):
+        '''override HTMLNode _repr_ to exclude children'''
+        output = (f"{type(self).__name__}"
+                  f"(tag={self.tag!r}, "
+                  f"value={self.value!r}, "
+                  f"props={self.props!r})"
+        )
+        return output
