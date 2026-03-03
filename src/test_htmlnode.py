@@ -65,6 +65,10 @@ class TestHTMLNode(unittest.TestCase):
         expected = "HTMLNode(tag='p', value='Hello', children=None, props={'class': 'greeting'})"
         self.assertEqual(repr(node), expected)
 
+    def test_to_html_not_imp(self):
+        with self.assertRaises(NotImplementedError):
+            HTMLNode("p").to_html()
+
 class TestLeafNode(unittest.TestCase):
     def test_leaf_to_html_p(self):
         node = LeafNode("p", "Hello, world!")
@@ -77,8 +81,52 @@ class TestLeafNode(unittest.TestCase):
         # Strings are wrapped in quotes because of the !r flag
         expected = "LeafNode(tag='p', value='Hello', props={'class': 'greeting'})"
         self.assertEqual(repr(node), expected)
+    
+    def test_no_tag(self):
+        raw_text = "This is raw text"
+        node = LeafNode(tag=None, value=raw_text)
+        self.assertEqual(node.to_html(), raw_text)
 
+    def test_link(self):
+        '''tests link generation AND multiple props at same time'''
+        link_text = "Link Text"
+        url = "www.google.com"
+        frame = "_blank"
+        
+        node = LeafNode(tag="a",
+                        value=link_text,
+                        props={"href": url,
+                               "target": frame})
+        expected = (f'<a href="{url}" target="{frame}">'
+                    f'{link_text}</a>'
+                    )
+        
+        self.assertEqual(expected, node.to_html())
 
+    def test_empty_val(self):
+        node = LeafNode("p","")
+        expected = "<p></p>"
+
+        self.assertEqual(node.to_html(),expected)
+
+    def test_no_val(self):
+        with self.assertRaisesRegex(ValueError,
+                                    "Leaf Node MUST have a value"):
+            LeafNode("p", None).to_html()
+
+    def test_parent_repr(self):
+        child1 = LeafNode(tag="p", value="Child_text")
+        child2 = HTMLNode()
+        children = [child1, child2]
+        parent = HTMLNode(tag="a", children=children)
+
+        expected = ("HTMLNode(tag='a', value=None, "
+                    "children=[LeafNode(tag='p', "
+                    "value='Child_text', props=None), "
+                    "HTMLNode(tag=None, value=None, "
+                    "children=None, props=None)], props=None)"
+        )
+        self.assertEqual(repr(parent), expected)
 
 if __name__ == "__main__":
     unittest.main()
