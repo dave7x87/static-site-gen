@@ -6,7 +6,8 @@ class HTMLNode:
                  tag: str | None = None,
                  value: str | None = None,
                  children: list[HTMLNode] | None = None,
-                 props: dict[str, str] | None = None):
+                 props: dict[str, str] | None = None
+                 ):
         self.tag = tag
         self.value = value
         self.children = children
@@ -51,7 +52,7 @@ class HTMLNode:
         if self.value:
             lines.append(f"{indent}  Value: {self.value!r}")
             
-        # Recursively print children
+        # Recursively read children
         if self.children:
             for child in self.children:
                 lines.append(child.gen_tree(level + 1))
@@ -64,7 +65,11 @@ class HTMLNode:
     
 class LeafNode(HTMLNode):
 
-    def __init__(self, tag, value, props = None):
+    def __init__(self,
+                 tag: str | None,
+                 value: str,
+                 props: dict[str, str] | None = None
+                 ):
         super().__init__(tag = tag,
                          value = value,
                          props = props
@@ -92,3 +97,38 @@ class LeafNode(HTMLNode):
                   f"props={self.props!r})"
         )
         return output
+
+class ParentNode(HTMLNode):
+    def __init__(self,
+                 tag : str,
+                 children: list[HTMLNode],
+                 props: dict[str, str] | None = None
+                 ):
+        super().__init__(tag=tag,
+                         children=children,
+                         props=props
+                         )
+        
+    def to_html(self):
+        if (self.tag is None
+            or self.tag == ""
+            ):
+            raise ValueError("ParentNode must have tag")
+        if (self.children is None
+            or not(isinstance(self.children, list))
+            or len(self.children) == 0
+            ):
+            raise ValueError("ParentNode must have list of children")
+        
+        components = []
+
+        # We use props_to_html() to get the string of attributes
+        props_str = self.props_to_html()
+        components.append(f"<{self.tag}{props_str}>")
+
+        for child in self.children:
+            components.append(child.to_html())
+
+        components.append(f"</{self.tag}>")
+
+        return "".join(components)
