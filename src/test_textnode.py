@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType
+from textnode import TextNode, TextType, text_node_to_html_node
 
 DEFAULT_TEXT = "This is a text node"
 
@@ -37,8 +37,15 @@ class TestTextNode(unittest.TestCase):
 
     def test_repr(self):
         node = TextNode("This is a text node", TextType.PLAIN, "https://www.boot.dev")
-        expected = "TextNode(This is a text node, plain, https://www.boot.dev)"
+        expected = "TextNode(This is a text node, text, https://www.boot.dev)"
         self.assertEqual(expected,repr(node))
+
+class test_text_node_to_html_node(unittest.TestCase):
+    def test_text(self):
+        node = TextNode("This is a text node", TextType.PLAIN)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, None)
+        self.assertEqual(html_node.value, "This is a text node")
 
 if __name__ == "__main__":
     unittest.main()
