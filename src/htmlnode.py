@@ -2,24 +2,33 @@ from __future__ import annotations
 from html import escape
 
 class HTMLNode:
+    # All additional behaviour currently defaults to off
+    # to ensure compatibility with external tests 
+    
+    # Set Default HTML Escape Behaviour if not specified.
+    # (i.e. convert characters which may cause HTML issues)
+    DEFAULT_ESCAPE_BEHAVIOUR = False
+
     def __init__(self,
                  tag: str | None = None,
                  value: str | None = None,
                  children: list[HTMLNode] | None = None,
                  props: dict[str, str] | None = None
                  ):
-        self.tag = tag
+        self.tag = tag.lower() if tag else None
         self.value = value
         self.children = children
         self.props = props
 
-    def to_html(self):
+    def to_html(self, use_escape: bool | None = None):
+        '''use_escape is used by leafnode/parentnode
+        for HTML escaping (optional)'''
         raise NotImplementedError("to_html method not implemented")
     
-    def props_to_html(self, use_escape: bool = False):
-        '''if use_escape is True, will convert properties to ensure HTML safety.
-        (Optional, Default = False)
-        Defaults to false to account for unit tests where results are expected to not be escaped'''
+    def props_to_html(self, use_escape: bool | None = None):
+        if use_escape is None:
+            use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
+        
         if not self.props:
             return ""
         
@@ -40,13 +49,13 @@ class HTMLNode:
         indent = "  " * level
         
         lines = [] #hold the lines we're producing
-        
+        display_tag = self.tag if self.tag else "[No tag]"
         
         # We use props_to_html() to get the string of attributes
         props_str = self.props_to_html()
         
         # We show the tag and its attributes on the first line
-        lines.append(f"{indent}<{self.tag}{props_str}>")
+        lines.append(f"{indent}<{display_tag}{props_str}>")
         
         # If there's a value, show it indented even further
         if self.value:
@@ -58,12 +67,17 @@ class HTMLNode:
                 lines.append(child.gen_tree(level + 1))
                 
         # Show the closing tag for clarity
-        lines.append(f"{indent}</{self.tag}>")
+        lines.append(f"{indent}</{display_tag}>")
 
         # Join and return
         return "\n".join(lines)
     
 class LeafNode(HTMLNode):
+    # Additional behaviour toggle
+    # Disabled by default for external testing
+
+    VOID_TAG_HANDLING = False
+    void_tags = {"img", "br", "hr"}
 
     def __init__(self,
                  tag: str | None,
@@ -75,7 +89,10 @@ class LeafNode(HTMLNode):
                          props = props
                          )
 
-    def to_html(self):
+    def to_html(self, use_escape: bool | None = None):
+        if use_escape is None:
+            use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
+        
         if self.value is None:
             raise ValueError("Leaf Node MUST have a value")
         
@@ -83,11 +100,15 @@ class LeafNode(HTMLNode):
             return self.value
         
         else:
-            return (f"<{self.tag}"
-                    f"{self.props_to_html()}>"
-                    f"{self.value}"
-                    f"</{self.tag}>"
-            )
+            parts = [f"<{self.tag}",
+                    f"{self.props_to_html(use_escape)}>",
+                    f"{escape(self.value) if use_escape else self.value}",
+                    ]
+            if (not self.VOID_TAG_HANDLING
+                or self.tag not in self.void_tags
+            ):
+                parts.append(f"</{self.tag}>")
+            return "".join(parts)
 
     def __repr__(self):
         '''override HTMLNode _repr_ to exclude children'''
@@ -120,17 +141,20 @@ class ParentNode(HTMLNode):
         if not isinstance(self.children, list) or len(self.children) == 0:
             raise ValueError("ParentNode must have list of children")
         
-    def to_html(self):
+    def to_html(self, use_escape: bool | None = None):
         self._validate()
         
+        if use_escape is None:
+            use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
+                
         components = []
 
         # We use props_to_html() to get the string of attributes
-        props_str = self.props_to_html()
+        props_str = self.props_to_html(use_escape)
         components.append(f"<{self.tag}{props_str}>")
 
         for child in self.children:
-            components.append(child.to_html())
+            components.append(child.to_html(use_escape))
 
         components.append(f"</{self.tag}>")
 
