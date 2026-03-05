@@ -2,6 +2,9 @@ import unittest
 
 from htmlnode import HTMLNode, LeafNode, ParentNode
 
+INITIAL_ESC_DEFAULT = HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR
+INITIAL_VOID_DEFAULT = LeafNode.VOID_TAG_HANDLING
+
 class TestHTMLNode(unittest.TestCase):
     def test_blank_tag(self):
         self.assertEqual(None, HTMLNode().tag)
@@ -194,6 +197,83 @@ class TestParentNode(unittest.TestCase):
             "ParentNode must have list of children"
             ):
             node = ParentNode("b", LeafNode(None, None))
+
+class TestNodesSafeMode(unittest.TestCase):
+    def setUp(self):
+        # Force "test mode" before every test
+        HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR = False
+        LeafNode.VOID_TAG_HANDLING = False
+
+    def tearDown(self):
+        HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR = INITIAL_ESC_DEFAULT
+        LeafNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
+
+    def test_no_escape(self):
+        child_node = LeafNode(
+            tag="a",
+            value = "What's 'taters' precious?",
+            props={
+                "href": "https://www.google.com?q=fish&chips",
+                "title": 'The "Great" Gatsby',
+            },
+        )
+        node = ParentNode(
+            tag="p",
+            children = [child_node]
+        )
+        # Should NOT escape the & or the "
+        expected = '<p><a href="https://www.google.com?q=fish&chips" title="The "Great" Gatsby">What\'s \'taters\' precious?</a></p>'
+        self.assertEqual(node.to_html(), expected)
+
+    def test_no_void(self):
+        node = LeafNode(
+            tag="img",
+            value="",
+            props={
+                "src": "https://www.google.com/google.jpg",
+                "alt": "Google Logo"
+            }
+        )
+        expected = '<img src="https://www.google.com/google.jpg" alt="Google Logo"></img>'
+        self.assertEqual(node.to_html(), expected)
+
+class TestNodesSafeModeOff(unittest.TestCase):
+    def setUp(self):
+        HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR = True
+        LeafNode.VOID_TAG_HANDLING = True
+
+    def tearDown(self):
+        HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR = INITIAL_ESC_DEFAULT
+        LeafNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
+
+    def test_escape(self):
+        child_node = LeafNode(
+            tag="a",
+            value = "What's 'taters' precious?",
+            props={
+                "href": "https://www.google.com?q=fish&chips",
+                "title": 'The "Great" Gatsby',
+            },
+        )
+        node = ParentNode(
+            tag="p",
+            children = [child_node]
+        )
+        # Should escape the & and the "
+        expected = '<p><a href="https://www.google.com?q=fish&amp;chips" title="The &quot;Great&quot; Gatsby">What&#x27;s &#x27;taters&#x27; precious?</a></p>'
+        self.assertEqual(node.to_html(), expected)
+
+    def test_void(self):
+        node = LeafNode(
+            tag="img",
+            value="",
+            props={
+                "src": "https://www.google.com/google.jpg",
+                "alt": "Google Logo"
+            }
+        )
+        expected = '<img src="https://www.google.com/google.jpg" alt="Google Logo">'
+        self.assertEqual(node.to_html(), expected)
 
 
 if __name__ == "__main__":
