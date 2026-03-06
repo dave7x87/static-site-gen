@@ -15,10 +15,18 @@ class TestTextNode(unittest.TestCase):
         node2 = TextNode(DEFAULT_TEXT, TextType.LINK, "https://www.google.com")
         self.assertNotEqual(node, node2)
     
-    def test_empty_url_not_eq(self):
-        node = TextNode(DEFAULT_TEXT, TextType.LINK)
-        node2 = TextNode(DEFAULT_TEXT, TextType.LINK, "")
-        self.assertNotEqual(node, node2)
+    def test_no_url(self):
+        with self.assertRaisesRegex(ValueError, "No URL provided"):
+            node = TextNode(DEFAULT_TEXT, TextType.LINK)
+
+    def test_no_img_source(self):
+        with self.assertRaisesRegex(ValueError, "No image source provided"):
+            node = TextNode(DEFAULT_TEXT, TextType.IMAGE)
+    
+    def test_empty_img_source(self):
+        with self.assertRaisesRegex(ValueError, "No image source provided"):
+            node = TextNode(DEFAULT_TEXT, TextType.IMAGE, "")
+    
 
     def test_text_not_eq(self):
         node = TextNode(DEFAULT_TEXT, TextType.PLAIN)
@@ -37,7 +45,7 @@ class TestTextNode(unittest.TestCase):
 
     def test_repr(self):
         node = TextNode("This is a text node", TextType.PLAIN, "https://www.boot.dev")
-        expected = "TextNode(This is a text node, text, https://www.boot.dev)"
+        expected = "TextNode('This is a text node', 'text', 'https://www.boot.dev')"
         self.assertEqual(expected,repr(node))
 
 class test_text_node_to_html_node(unittest.TestCase):
@@ -109,6 +117,31 @@ class test_text_node_to_html_node(unittest.TestCase):
                 "alt": "This is an image node"
                 }
                 )
+        
+    def test_invalid_type(self):
+        node = TextNode("This is not a text node", "not_a_type")
+        with self.assertRaisesRegex(ValueError, "Unknown TextType"):
+            text_node_to_html_node(node)
+
+    def test_empty_val(self):
+        node = text_node_to_html_node(TextNode(
+            text="",
+            text_type=TextType.TEXT
+            ))
+        node_html = node.to_html()
+        expected = ""
+        self.assertEqual(node_html, expected)
+
+    def test_empty_url(self):
+        node = TextNode(DEFAULT_TEXT, TextType.LINK, "")
+        expected = '<a href="">This is a text node</a>'
+        self.assertEqual(text_node_to_html_node(node).to_html(), expected)
+
+    def test_img_alt(self):
+        node = text_node_to_html_node(TextNode("", TextType.IMAGE, "logo.jpg"))
+        node.VOID_TAG_HANDLING = True
+        expected = '<img src="logo.jpg" alt="">'
+        self.assertEqual(node.to_html(), expected)
 
 if __name__ == "__main__":
     unittest.main()

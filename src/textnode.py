@@ -20,8 +20,17 @@ class TextNode:
     url: Optional[str] = None
 
     def __repr__(self):
-        return f"TextNode({self.text}, {self.text_type.value}, {self.url})"
-
+        return f"TextNode({self.text!r}, {self.text_type.value!r}, {self.url!r})"
+    
+    def __post_init__(self):
+        match self:
+            # Match any node where text_type is LINK/URL and url is None
+            case TextNode(text_type=(TextType.LINK | TextType.URL), url=None):
+                raise ValueError("No URL provided")
+                
+            # Match any node where text_type is IMAGE and url is empty/None
+            case TextNode(text_type=TextType.IMAGE, url=None | ""):
+                raise ValueError("No image source provided")
 
 def text_node_to_html_node(text_node: TextNode):
     match text_node.text_type:
@@ -47,12 +56,13 @@ def text_node_to_html_node(text_node: TextNode):
                             props={"href": text_node.url}
                             )
         case TextType.IMAGE:
-            return LeafNode(tag="img",
+            return  LeafNode(tag="img",
                             value="",
                             props={
                                 "src": text_node.url,
                                 "alt": text_node.text,
                                 }
                                 )
+
         case _:
             raise ValueError("Unknown TextType")
