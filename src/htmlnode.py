@@ -19,7 +19,16 @@ class HTMLNode:
         self.value = value
         self.children = children
         self.props = props
-
+    
+    def __repr__(self):
+        output = (f"{type(self).__name__}"
+                  f"(tag={self.tag!r}, "
+                  f"value={self.value!r}, "
+                  f"children={self.children!r}, "
+                  f"props={self.props!r})"
+        )
+        return output
+    
     def to_html(self, use_escape: bool | None = None):
         '''use_escape is used by leafnode/parentnode
         for HTML escaping (optional)'''
@@ -35,14 +44,7 @@ class HTMLNode:
         return f" {' '.join(f'{k}="{escape(v) if use_escape else v}"'
                             for k,v in self.props.items())}"
     
-    def __repr__(self):
-        output = (f"{type(self).__name__}"
-                  f"(tag={self.tag!r}, "
-                  f"value={self.value!r}, "
-                  f"children={self.children!r}, "
-                  f"props={self.props!r})"
-        )
-        return output
+
     
     def gen_tree(self, level=0):
         '''generates a tree structure principally for debugging purposes'''
@@ -89,6 +91,15 @@ class LeafNode(HTMLNode):
                          props = props
                          )
 
+    def __repr__(self):
+        '''override HTMLNode _repr_ to exclude children'''
+        output = (f"{type(self).__name__}"
+                  f"(tag={self.tag!r}, "
+                  f"value={self.value!r}, "
+                  f"props={self.props!r})"
+        )
+        return output
+    
     def to_html(self, use_escape: bool | None = None):
         if use_escape is None:
             use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
@@ -110,14 +121,7 @@ class LeafNode(HTMLNode):
                 parts.append(f"</{self.tag}>")
             return "".join(parts)
 
-    def __repr__(self):
-        '''override HTMLNode _repr_ to exclude children'''
-        output = (f"{type(self).__name__}"
-                  f"(tag={self.tag!r}, "
-                  f"value={self.value!r}, "
-                  f"props={self.props!r})"
-        )
-        return output
+
 
 class ParentNode(HTMLNode):
     def __init__(self,
