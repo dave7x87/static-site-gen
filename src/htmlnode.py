@@ -1,7 +1,8 @@
 from __future__ import annotations
+#from abc import ABC, abstractmethod
 from html import escape
 
-class HTMLNode:
+class HTMLNode():#(ABC):
     # All additional behaviour currently defaults to off
     # to ensure compatibility with external tests 
     
@@ -29,10 +30,14 @@ class HTMLNode:
         )
         return output
     
-    def to_html(self, use_escape: bool | None = None):
+    def to_html(self, use_escape: bool | None = None):    
         '''use_escape is used by leafnode/parentnode
         for HTML escaping (optional)'''
         raise NotImplementedError("to_html method not implemented")
+    
+    #@abstractmethod #currently disallowed by spec
+    def html_generator(self):
+        raise NotImplementedError("html_generator method not implemented")
     
     def props_to_html(self, use_escape: bool | None = None):
         if use_escape is None:

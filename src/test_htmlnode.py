@@ -2,32 +2,45 @@ import unittest
 
 from htmlnode import HTMLNode, LeafNode, ParentNode
 
+class _HTMLTestNode(HTMLNode):
+    '''minimal concrete subclass for testing shared HTMLNode behavior'''
+    def html_generator(self):
+        '''includes a stub render implementation so tests remain
+        compatible if the render hook becomes abstract'''
+        super().html_generator()
+
 INITIAL_ESC_DEFAULT = HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR
 INITIAL_VOID_DEFAULT = LeafNode.VOID_TAG_HANDLING
 
 class TestHTMLNode(unittest.TestCase):
+    
+    #def test_base_node_instantiation(self):
+    #    with self.assertRaises(TypeError) as cm:
+    #        HTMLNode()
+    #    self.assertIn("abstract class", str(cm.exception))
+    
     def test_blank_tag(self):
-        self.assertEqual(None, HTMLNode().tag)
+        self.assertEqual(None, _HTMLTestNode().tag)
         
     def test_blank_value(self):
-        self.assertEqual(None, HTMLNode().value)
+        self.assertEqual(None, _HTMLTestNode().value)
     
     def test_no_children(self):
-        self.assertEqual(None, HTMLNode().children)
+        self.assertEqual(None, _HTMLTestNode().children)
 
     def test_empty_repr(self):
-        expected = "HTMLNode(tag=None, value=None, children=None, props=None)"
-        self.assertEqual(expected, repr(HTMLNode()))
+        expected = "_HTMLTestNode(tag=None, value=None, children=None, props=None)"
+        self.assertEqual(expected, repr(_HTMLTestNode()))
 
     def test_props_to_html(self):
-        test = HTMLNode(props={"href":"www.google.com", "target":"_blank"})
+        test = _HTMLTestNode(props={"href":"www.google.com", "target":"_blank"})
         expected = ' href="www.google.com" target="_blank"'
         
         self.assertEqual(test.props_to_html(), expected)
 
     def test_props_to_html_default(self):
         # Testing the default (unescaped) behavior for the autograder
-        node = HTMLNode(
+        node = _HTMLTestNode(
             tag="div",
             props={
                 "href": "https://www.google.com?q=fish&chips",
@@ -40,7 +53,7 @@ class TestHTMLNode(unittest.TestCase):
 
     def test_props_to_html_escaped(self):
         # Testing safeguard
-        node = HTMLNode(
+        node = _HTMLTestNode(
             tag="div",
             props={
                 "href": "https://www.google.com?q=fish&chips",
@@ -55,22 +68,22 @@ class TestHTMLNode(unittest.TestCase):
 
     def test_props_to_html_no_props(self):
         # Testing the edge case of None or empty props
-        node_none = HTMLNode(tag="div", props=None)
-        node_empty = HTMLNode(tag="div", props={})
+        node_none = _HTMLTestNode(tag="div", props=None)
+        node_empty = _HTMLTestNode(tag="div", props={})
         
         self.assertEqual(node_none.props_to_html(), "")
         self.assertEqual(node_empty.props_to_html(), "")
 
     def test_repr(self):
         # Verifying  !r formatting in __repr__
-        node = HTMLNode(tag="p", value="Hello", props={"class": "greeting"})
+        node = _HTMLTestNode(tag="p", value="Hello", props={"class": "greeting"})
         # Strings are wrapped in quotes because of the !r flag
-        expected = "HTMLNode(tag='p', value='Hello', children=None, props={'class': 'greeting'})"
+        expected = "_HTMLTestNode(tag='p', value='Hello', children=None, props={'class': 'greeting'})"
         self.assertEqual(repr(node), expected)
 
     def test_to_html_not_imp(self):
         with self.assertRaises(NotImplementedError):
-            HTMLNode("p").to_html()
+            _HTMLTestNode("p").to_html()
 
 class TestLeafNode(unittest.TestCase):
     def test_leaf_to_html_p(self):
@@ -119,14 +132,14 @@ class TestLeafNode(unittest.TestCase):
 
     def test_leaf_repr_correct_from_parent(self):
         child1 = LeafNode(tag="p", value="Child_text")
-        child2 = HTMLNode()
+        child2 = _HTMLTestNode()
         children = [child1, child2]
-        parent = HTMLNode(tag="a", children=children)
+        parent = _HTMLTestNode(tag="a", children=children)
 
-        expected = ("HTMLNode(tag='a', value=None, "
+        expected = ("_HTMLTestNode(tag='a', value=None, "
                     "children=[LeafNode(tag='p', "
                     "value='Child_text', props=None), "
-                    "HTMLNode(tag=None, value=None, "
+                    "_HTMLTestNode(tag=None, value=None, "
                     "children=None, props=None)], props=None)"
         )
         self.assertEqual(repr(parent), expected)
