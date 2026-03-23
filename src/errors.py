@@ -10,7 +10,7 @@ class SSGError(Exception):
     def get_default_message(self):
         return "An internal SSG error has occurred"
 
-    def __init__(self, message: str | None =None):
+    def __init__(self, message: str | None = None):
         super().__init__(message or self.get_default_message())
 
 ### TextNode Errors

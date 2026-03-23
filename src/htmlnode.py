@@ -2,7 +2,7 @@ from __future__ import annotations
 #from abc import ABC, abstractmethod
 from html import escape
 
-class HTMLNode():#(ABC):
+class HTMLNode():#(ABC):  #ABC achieves nothing until abstractmethod activated
     # All additional behaviour currently defaults to off
     # to ensure compatibility with external tests 
     
@@ -36,8 +36,8 @@ class HTMLNode():#(ABC):
         raise NotImplementedError("to_html method not implemented")
     
     #@abstractmethod #currently disallowed by spec
-    def html_generator(self):
-        raise NotImplementedError("html_generator method not implemented")
+    def iter_html(self):
+        raise NotImplementedError("iter_html method not implemented")
     
     def props_to_html(self, use_escape: bool | None = None):
         if use_escape is None:
@@ -48,36 +48,6 @@ class HTMLNode():#(ABC):
         
         return f" {' '.join(f'{k}="{escape(v) if use_escape else v}"'
                             for k,v in self.props.items())}"
-    
-
-    
-    def gen_tree(self, level=0):
-        '''generates a tree structure principally for debugging purposes'''
-        indent = "  " * level
-        
-        lines = [] #hold the lines we're producing
-        display_tag = self.tag if self.tag else "[No tag]"
-        
-        # We use props_to_html() to get the string of attributes
-        props_str = self.props_to_html()
-        
-        # We show the tag and its attributes on the first line
-        lines.append(f"{indent}<{display_tag}{props_str}>")
-        
-        # If there's a value, show it indented even further
-        if self.value:
-            lines.append(f"{indent}  Value: {self.value!r}")
-            
-        # Recursively read children
-        if self.children:
-            for child in self.children:
-                lines.append(child.gen_tree(level + 1))
-                
-        # Show the closing tag for clarity
-        lines.append(f"{indent}</{display_tag}>")
-
-        # Join and return
-        return "\n".join(lines)
     
 class LeafNode(HTMLNode):
     # Additional behaviour toggle

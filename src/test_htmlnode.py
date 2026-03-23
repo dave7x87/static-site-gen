@@ -4,10 +4,10 @@ from htmlnode import HTMLNode, LeafNode, ParentNode
 
 class _HTMLTestNode(HTMLNode):
     '''minimal concrete subclass for testing shared HTMLNode behavior'''
-    def html_generator(self):
+    def iter_html(self):
         '''includes a stub render implementation so tests remain
         compatible if the render hook becomes abstract'''
-        super().html_generator()
+        super().iter_html()
 
 INITIAL_ESC_DEFAULT = HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR
 INITIAL_VOID_DEFAULT = LeafNode.VOID_TAG_HANDLING

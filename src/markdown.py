@@ -20,9 +20,9 @@ def split_nodes_delimiter(old_nodes: list[TextNode],
                           delimiter: str | MD_type,
                           text_type: TextType
                           ):
-    if not (isinstance(old_nodes, list)):
+    if not isinstance(old_nodes, list):
         raise ValueError("Nodes should be given as a list")
-        # If it's our Enum, get the string value (e.g., "**")
+    # If it's our Enum, get the string value (e.g., "**")
     actual_delimiter = (delimiter.value if isinstance(delimiter, MD_type)
                         else delimiter
     )
@@ -31,6 +31,8 @@ def split_nodes_delimiter(old_nodes: list[TextNode],
     node_types = [TextType.TEXT, text_type]
 
     for node in old_nodes:
+        ## move to using match/case instead of if/else. logic is clearer
+        ## will need to reverse order (i.e. handle plain text first)
         if (node.text_type != TextType.TEXT
             and node.text_type != TextType.PLAIN
             ):
