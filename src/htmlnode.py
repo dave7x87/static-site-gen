@@ -1,8 +1,9 @@
 from __future__ import annotations
+from typing import Iterator
 #from abc import ABC, abstractmethod
 from html import escape
 
-class HTMLNode():#(ABC):  #ABC achieves nothing until abstractmethod activated
+class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
     # All additional behaviour currently defaults to off
     # to ensure compatibility with external tests 
     
@@ -15,13 +16,13 @@ class HTMLNode():#(ABC):  #ABC achieves nothing until abstractmethod activated
                  value: str | None = None,
                  children: list[HTMLNode] | None = None,
                  props: dict[str, str] | None = None
-                 ):
+                 ) -> None:
         self.tag = tag.lower() if tag else None
         self.value = value
         self.children = children
         self.props = props
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         output = (f"{type(self).__name__}"
                   f"(tag={self.tag!r}, "
                   f"value={self.value!r}, "
@@ -30,8 +31,10 @@ class HTMLNode():#(ABC):  #ABC achieves nothing until abstractmethod activated
         )
         return output
     
-    def to_html(self, use_escape: bool | None = None):    
-        '''use_escape is used by leafnode/parentnode
+    def to_html(self,
+                use_escape: bool | None = None
+                ):    
+        '''use_escape is used by sub-classes
         for HTML escaping (optional)'''
         raise NotImplementedError("to_html method not implemented")
     
@@ -39,15 +42,19 @@ class HTMLNode():#(ABC):  #ABC achieves nothing until abstractmethod activated
     def iter_html(self):
         raise NotImplementedError("iter_html method not implemented")
     
-    def props_to_html(self, use_escape: bool | None = None):
+    def _iter_props_to_html(self, use_escape: bool | None = None) -> Iterator[str]:
+        '''Yields html property fragments.
+        May yield zero fragments if no props assigned'''
         if use_escape is None:
             use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
-        
-        if not self.props:
-            return ""
-        
-        return f" {' '.join(f'{k}="{escape(v) if use_escape else v}"'
-                            for k,v in self.props.items())}"
+
+        if self.props:
+            yield from (f' {k}="{escape(v) if use_escape else v}"'
+                    for k,v in self.props.items()
+            )
+
+    def props_to_html(self, use_escape: bool | None = None) -> str:
+        return "".join(self._iter_props_to_html(use_escape = use_escape))
     
 class LeafNode(HTMLNode):
     # Additional behaviour toggle
@@ -60,13 +67,13 @@ class LeafNode(HTMLNode):
                  tag: str | None,
                  value: str,
                  props: dict[str, str] | None = None
-                 ):
+                 ) -> None:
         super().__init__(tag = tag,
                          value = value,
                          props = props
                          )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         '''override HTMLNode _repr_ to exclude children'''
         output = (f"{type(self).__name__}"
                   f"(tag={self.tag!r}, "
@@ -103,7 +110,7 @@ class ParentNode(HTMLNode):
                  tag : str,
                  children: list[HTMLNode],
                  props: dict[str, str] | None = None
-                 ):
+                 ) -> None:
         super().__init__(tag=tag,
                          children=children,
                          props=props

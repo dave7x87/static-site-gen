@@ -1,7 +1,6 @@
 from __future__ import annotations
 from enum import Enum
 from dataclasses import dataclass
-from typing import Optional
 from htmlnode import LeafNode
 import errors
 
@@ -19,9 +18,9 @@ class TextType(Enum):
 class TextNode:
     text: str
     text_type: TextType
-    url: Optional[str] = None
+    url: str | None = None
     
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         match self:
             # Match any node where text_type is LINK/URL and url is None
             case TextNode(text_type=(TextType.LINK | TextType.URL), url=None):
@@ -31,7 +30,7 @@ class TextNode:
             case TextNode(text_type=TextType.IMAGE, url=None | ""):
                 raise errors.TextNodeNoURL(text_type=self.text_type)
     
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"TextNode({self.text!r}, {self.text_type.value!r}, {self.url!r})"
     
     @classmethod

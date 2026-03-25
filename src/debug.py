@@ -1,13 +1,13 @@
 from htmlnode import HTMLNode
 
 class DebugError(Exception):
-    def get_default_message(self):
+    def get_default_message(self) -> str:
         return "A debugging error has occurred"
 
-    def __init__(self, message: str | None = None):
+    def __init__(self, message: str | None = None) -> None:
         super().__init__(message or self.get_default_message())
 
-def gen_tree(node: HTMLNode, level: int = 0):
+def gen_tree(node: HTMLNode, level: int = 0) -> str:
     '''generates a tree structure principally for debugging purposes'''
     if not isinstance(node, HTMLNode):
         raise DebugError(message = "\n".join((

@@ -1,7 +1,7 @@
 from enum import Enum
 from textnode import TextNode, TextType
 
-class MD_type(Enum):
+class MDtype(Enum):
     h1 = "#"
     h2 = "##"
     h3 = "###"
@@ -17,13 +17,13 @@ class MD_type(Enum):
     IMAGE = "!"
 
 def split_nodes_delimiter(old_nodes: list[TextNode],
-                          delimiter: str | MD_type,
+                          delimiter: str | MDtype,
                           text_type: TextType
                           ):
     if not isinstance(old_nodes, list):
         raise ValueError("Nodes should be given as a list")
     # If it's our Enum, get the string value (e.g., "**")
-    actual_delimiter = (delimiter.value if isinstance(delimiter, MD_type)
+    actual_delimiter = (delimiter.value if isinstance(delimiter, MDtype)
                         else delimiter
     )
     

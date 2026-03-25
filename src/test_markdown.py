@@ -1,6 +1,6 @@
 import unittest
 
-from markdown import split_nodes_delimiter, MD_type
+from markdown import split_nodes_delimiter, MDtype
 from textnode import TextNode, TextType
 
 class TestSplitNodesDelimiter(unittest.TestCase):
@@ -9,7 +9,7 @@ class TestSplitNodesDelimiter(unittest.TestCase):
 
         split_nodes= split_nodes_delimiter(
             old_nodes=[src_node],
-            delimiter=MD_type.CODE, 
+            delimiter=MDtype.CODE, 
             text_type=TextType.CODE
         )
         expected = [
@@ -28,7 +28,7 @@ class TestSplitNodesDelimiter(unittest.TestCase):
 
         split_nodes = split_nodes_delimiter(
             old_nodes=node_list,
-            delimiter=MD_type.CODE, 
+            delimiter=MDtype.CODE, 
             text_type=TextType.CODE
         )
         expected = [
@@ -43,18 +43,18 @@ class TestSplitNodesDelimiter(unittest.TestCase):
 
     def test_no_split(self):
         node = [TextNode.plain("nothing to split here!")]
-        after_split_attempt = split_nodes_delimiter(node, MD_type.BOLD, TextType.BOLD)
+        after_split_attempt = split_nodes_delimiter(node, MDtype.BOLD, TextType.BOLD)
 
         self.assertEqual(node, after_split_attempt)
 
     def test_empty_list(self):
-        result = split_nodes_delimiter([], MD_type.ITALIC, TextType.ITALIC)
+        result = split_nodes_delimiter([], MDtype.ITALIC, TextType.ITALIC)
         self.assertEqual([], result)
 
     def test_not_list(self):
         with self.assertRaisesRegex(ValueError, "Nodes should be given as a list"):
             node = TextNode.plain("This should be rejected")
-            split_nodes_delimiter(node, MD_type.CODE, TextType.CODE)
+            split_nodes_delimiter(node, MDtype.CODE, TextType.CODE)
             
 
 

@@ -1,4 +1,5 @@
 import unittest
+import types
 
 from htmlnode import HTMLNode, LeafNode, ParentNode
 
@@ -84,6 +85,21 @@ class TestHTMLNode(unittest.TestCase):
     def test_to_html_not_imp(self):
         with self.assertRaises(NotImplementedError):
             _HTMLTestNode("p").to_html()
+
+    def test_props_generator(self):
+        node = _HTMLTestNode(
+            tag="a",
+            value="click me",
+            props={"href": "http://boot.dev",
+                   "target": "_blank"
+                   }
+        )
+        result = node._iter_props_to_html()
+        self.assertIsInstance(result, types.GeneratorType)
+        self.assertEqual(next(result), ' href="http://boot.dev"')
+        self.assertEqual(next(result), ' target="_blank"')
+        with self.assertRaises(StopIteration):
+            next(result)
 
 class TestLeafNode(unittest.TestCase):
     def test_leaf_to_html_p(self):
