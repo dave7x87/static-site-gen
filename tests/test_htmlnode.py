@@ -1,7 +1,7 @@
 import unittest
 import types
 
-from htmlnode import HTMLNode, LeafNode, ParentNode
+from src.htmlnode import HTMLNode, LeafNode, ParentNode
 
 class _HTMLTestNode(HTMLNode):
     '''minimal concrete subclass for testing shared HTMLNode behavior'''

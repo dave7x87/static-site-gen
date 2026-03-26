@@ -1,7 +1,7 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node
-import errors
+from src.textnode import TextNode, TextType, text_node_to_html_node
+import src.errors as errors
 
 DEFAULT_TEXT = "This is a text node"
 

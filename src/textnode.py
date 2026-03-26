@@ -1,8 +1,8 @@
 from __future__ import annotations
 from enum import Enum
 from dataclasses import dataclass
-from htmlnode import LeafNode
-import errors
+from src.htmlnode import LeafNode
+import src.errors as errors
 
 class TextType(Enum):
     TEXT = "text"

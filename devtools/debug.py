@@ -1,4 +1,4 @@
-from htmlnode import HTMLNode
+from src.htmlnode import HTMLNode
 
 class DebugError(Exception):
     def get_default_message(self) -> str:

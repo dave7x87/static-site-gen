@@ -1,7 +1,7 @@
 import unittest
 
-from markdown import split_nodes_delimiter, MDtype
-from textnode import TextNode, TextType
+from src.markdown import split_nodes_delimiter, MDtype
+from src.textnode import TextNode, TextType
 
 class TestSplitNodesDelimiter(unittest.TestCase):
     def test_basic_split(self):

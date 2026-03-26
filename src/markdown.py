@@ -1,5 +1,5 @@
 from enum import Enum
-from textnode import TextNode, TextType
+from src.textnode import TextNode, TextType
 
 class MDtype(Enum):
     h1 = "#"

@@ -1,8 +1,8 @@
 import unittest
 
-from debug import gen_tree, DebugError
-from htmlnode import LeafNode, ParentNode
-from textnode import TextNode
+from devtools.debug import gen_tree, DebugError
+from src.htmlnode import LeafNode, ParentNode
+from src.textnode import TextNode
 
 class TestGenTree(unittest.TestCase):
     def test_invalid_node(self):
