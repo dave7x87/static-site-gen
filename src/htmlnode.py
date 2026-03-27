@@ -44,7 +44,8 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
     
     def _iter_props_to_html(self, use_escape: bool | None = None) -> Iterator[str]:
         '''Yields html property fragments.
-        May yield zero fragments if no props assigned'''
+        May yield zero fragments if no props assigned
+        use_escape (optional) defines if html escaping is enabled'''
         if use_escape is None:
             use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
 
@@ -53,7 +54,18 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
                     for k,v in self.props.items()
             )
 
+    def _open_tag(self, use_escape: bool | None = None) -> Iterator[str]:
+        '''use_escape defines optional html escape behaviour'''
+        yield f"<{self.tag}"
+        yield from self._iter_props_to_html(use_escape = use_escape)
+        yield ">"
+
+
+    def _close_tag(self) -> str:
+        return f"</{self.tag}>"
+
     def props_to_html(self, use_escape: bool | None = None) -> str:
+        '''use_escape defines optional html escape behaviour'''
         return "".join(self._iter_props_to_html(use_escape = use_escape))
     
 class LeafNode(HTMLNode):

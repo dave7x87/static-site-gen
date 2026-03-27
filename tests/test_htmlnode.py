@@ -101,6 +101,28 @@ class TestHTMLNode(unittest.TestCase):
         with self.assertRaises(StopIteration):
             next(result)
 
+    def test_open_tag(self):
+        node = _HTMLTestNode(
+            tag="a",
+            value="click me",
+            props={"href": "http://boot.dev",
+                   "target": "_blank"
+                   }
+        )
+        result = node._open_tag()
+        self.assertIsInstance(result, types.GeneratorType)
+        self.assertEqual("".join(result), '<a href="http://boot.dev" target="_blank">')
+
+    def test_close_tag(self):
+        node = _HTMLTestNode(
+            tag="a",
+            value="click me",
+            props={"href": "http://boot.dev",
+                   "target": "_blank"
+                   }
+        )
+        self.assertEqual(node._close_tag(),"</a>")
+
 class TestLeafNode(unittest.TestCase):
     def test_leaf_to_html_p(self):
         node = LeafNode("p", "Hello, world!")
