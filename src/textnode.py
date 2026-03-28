@@ -14,7 +14,7 @@ class TextType(Enum):
     URL = "url"     #added as compatibility option
     IMAGE = "image"
 
-@dataclass
+@dataclass(slots=True)
 class TextNode:
     text: str
     text_type: TextType

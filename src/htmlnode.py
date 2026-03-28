@@ -4,6 +4,8 @@ from typing import Iterator
 from html import escape
 
 class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
+    __slots__ = ("tag", "value", "children", "props")
+    
     # All additional behaviour currently defaults to off
     # to ensure compatibility with external tests 
     
@@ -69,6 +71,7 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
         return "".join(self._iter_props_to_html(use_escape = use_escape))
     
 class LeafNode(HTMLNode):
+    __slots__ = ()
     # Additional behaviour toggle
     # Disabled by default for external testing
 
@@ -118,6 +121,7 @@ class LeafNode(HTMLNode):
 
 
 class ParentNode(HTMLNode):
+    __slots__ = ()
     def __init__(self,
                  tag : str,
                  children: list[HTMLNode],
