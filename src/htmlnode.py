@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import Iterator
 #from abc import ABC, abstractmethod
 from html import escape
+import src.errors as errors
 
 class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
     __slots__ = ("tag", "value", "children", "props")
@@ -33,15 +34,12 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
         )
         return output
     
-    def to_html(self,
-                use_escape: bool | None = None
-                ):    
-        '''use_escape is used by sub-classes
-        for HTML escaping (optional)'''
-        raise NotImplementedError("to_html method not implemented")
+    def to_html(self, use_escape: bool | None = None) -> str:    
+        '''use_escape is used by sub-classes for HTML escaping (optional)'''
+        return "".join(self.iter_html(use_escape = use_escape))
     
     #@abstractmethod #currently disallowed by spec
-    def iter_html(self):
+    def iter_html(self, use_escape: bool | None = None) -> Iterator[str]:
         raise NotImplementedError("iter_html method not implemented")
     
     def _iter_props_to_html(self, use_escape: bool | None = None) -> Iterator[str]:
@@ -62,20 +60,56 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
         yield from self._iter_props_to_html(use_escape = use_escape)
         yield ">"
 
-
     def _close_tag(self) -> str:
         return f"</{self.tag}>"
 
+    def _invalid_tag(self) -> bool:
+        return self.tag is None or self.tag == ""
+
     def props_to_html(self, use_escape: bool | None = None) -> str:
         '''use_escape defines optional html escape behaviour'''
-        return "".join(self._iter_props_to_html(use_escape = use_escape))
-    
-class LeafNode(HTMLNode):
+        return ("".join(self._iter_props_to_html(use_escape = use_escape))
+                if self.props else ""
+        )
+
+class VoidNode(HTMLNode):
     __slots__ = ()
+
     # Additional behaviour toggle
     # Disabled by default for external testing
-
     VOID_TAG_HANDLING = False
+
+    def __init__(self,
+                 tag: str | None,
+                 props: dict[str, str] | None = None
+                 ) -> None:
+        super().__init__(tag = tag, props = props)
+        self._validate()
+
+    def __repr__(self) -> str:
+        '''override HTMLNode _repr_ to exclude children/value'''
+        output = (f"{type(self).__name__}"
+                  f"(tag={self.tag!r}, "
+                  f"props={self.props!r})"
+        )
+        return output
+    
+    def _validate(self) -> None:
+        '''screens for empty/none inputs
+        Used at initialisation time and also at use time
+        to meet spec and guard against outside mutation'''
+        if self._invalid_tag():
+            raise errors.HTMLNodeMissingAttributeError(attribute="tag")
+        
+    def iter_html(self, use_escape: bool | None = None) -> Iterator[str]:
+        self._validate()
+        yield from self._open_tag(use_escape = use_escape)
+       
+
+class LeafNode(HTMLNode):
+    __slots__ = ()
+
+    VOID_TAG_HANDLING = VoidNode.VOID_TAG_HANDLING #Short term compatibility helper pending refactor
     void_tags = {"img", "br", "hr"}
 
     def __init__(self,
@@ -87,6 +121,7 @@ class LeafNode(HTMLNode):
                          value = value,
                          props = props
                          )
+        self._validate()
 
     def __repr__(self) -> str:
         '''override HTMLNode _repr_ to exclude children'''
@@ -96,6 +131,13 @@ class LeafNode(HTMLNode):
                   f"props={self.props!r})"
         )
         return output
+
+    def _validate(self) -> None:
+        '''screens for empty/none inputs
+        Used at initialisation time and also at use time
+        to meet spec and guard against outside mutation'''
+        if self.value is None:
+            raise errors.HTMLNodeMissingAttributeError(attribute="value")
     
     def to_html(self, use_escape: bool | None = None):
         if use_escape is None:
@@ -104,7 +146,7 @@ class LeafNode(HTMLNode):
         if self.value is None:
             raise ValueError("Leaf Node MUST have a value")
         
-        if self.tag is None:
+        if self._invalid_tag():
             return self.value
         
         else:
@@ -117,8 +159,6 @@ class LeafNode(HTMLNode):
             ):
                 parts.append(f"</{self.tag}>")
             return "".join(parts)
-
-
 
 class ParentNode(HTMLNode):
     __slots__ = ()
@@ -138,7 +178,7 @@ class ParentNode(HTMLNode):
         Used at initialisation time and also at use time
         to meet spec and guard against outside mutation'''
 
-        if not self.tag:
+        if self._invalid_tag():
             raise ValueError("ParentNode must have tag")
         if not isinstance(self.children, list) or len(self.children) == 0:
             raise ValueError("ParentNode must have list of children")

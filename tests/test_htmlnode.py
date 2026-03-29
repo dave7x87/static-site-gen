@@ -2,6 +2,7 @@ import unittest
 import types
 
 from src.htmlnode import HTMLNode, LeafNode, ParentNode
+import src.errors as errors
 
 class _HTMLTestNode(HTMLNode):
     '''minimal concrete subclass for testing shared HTMLNode behavior'''
@@ -164,8 +165,7 @@ class TestLeafNode(unittest.TestCase):
         self.assertEqual(node.to_html(),expected)
 
     def test_no_val(self):
-        with self.assertRaisesRegex(ValueError,
-                                    "Leaf Node MUST have a value"):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
             LeafNode("p", None).to_html()
 
     def test_leaf_repr_correct_from_parent(self):
@@ -247,7 +247,7 @@ class TestParentNode(unittest.TestCase):
             ValueError,
             "ParentNode must have list of children"
             ):
-            node = ParentNode("b", LeafNode(None, None))
+            node = ParentNode("b", LeafNode(tag="", value=""))
 
 class TestNodesSafeMode(unittest.TestCase):
     def setUp(self):

@@ -135,7 +135,7 @@ class test_text_node_to_html_node(unittest.TestCase):
     def test_img_alt(self):
         node = text_node_to_html_node(TextNode.image(text="", url="logo.jpg"))
         basic = '<img src="logo.jpg" alt="">'
-        expected = f'{basic}</img>' if node.VOID_TAG_HANDLING else basic
+        expected = f'{basic}</img>' if not node.VOID_TAG_HANDLING else basic
         self.assertEqual(node.to_html(), expected)
 
 if __name__ == "__main__":

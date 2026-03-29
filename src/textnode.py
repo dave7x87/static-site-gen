@@ -33,6 +33,7 @@ class TextNode:
     def __repr__(self) -> str:
         return f"TextNode({self.text!r}, {self.text_type.value!r}, {self.url!r})"
     
+    ## TextNode Factory Methods
     @classmethod
     def plain(cls, text: str) -> TextNode:
         return cls(text, TextType.TEXT)

@@ -37,3 +37,29 @@ class TextNodeNoURL(TextNodeTypeError):
     def get_default_message(self) -> str:
         return "URL required for this node type"
     
+### HTML Node Errors
+
+class HTMLNodeError(SSGError):
+    def get_default_message(self) -> str:
+        return "Error with HTMLNode"
+    
+class HTMLNodeAttributeError(HTMLNodeError):
+    def get_default_message(self) -> str:
+        return "Error with HTMLNode attribute"
+    
+    def __init__(self,
+                message: str | None = None,
+                attribute: str | None = None,
+                ) -> None:
+        if message is None:
+            message = self.get_default_message()
+            if attribute:
+                message = f"{message}: (attribute:{attribute})"
+        super().__init__(message)
+    
+    
+class HTMLNodeMissingAttributeError(HTMLNodeAttributeError):
+    def get_default_message(self) -> str:
+        return "Missing required attribute for this node type"
+    
+
