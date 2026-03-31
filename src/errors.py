@@ -62,4 +62,25 @@ class HTMLNodeMissingAttributeError(HTMLNodeAttributeError):
     def get_default_message(self) -> str:
         return "Missing required attribute for this node type"
     
+class HTMLNodePropError(HTMLNodeError):
+    def get_default_message(self) -> str:
+        return "Issue with prop provided"
+    
+    def __init__(self,
+                message: str | None = None,
+                prop: str | None = None,
+                ) -> None:
+        if message is None:
+            message = self.get_default_message()
+            if prop:
+                message = f"{message}: (prop:{prop})"
+        super().__init__(message)
+
+class HTMLNodePropConflict(HTMLNodePropError):
+    def get_default_message(self) -> str:
+        return "Protected prop passed as other prop"
+
+class HTMLNodePropTypeError(HTMLNodePropError):
+    def get_default_message(self) -> str:
+        return "Prop provided is wrong type"
 

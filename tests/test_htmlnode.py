@@ -1,18 +1,18 @@
 import unittest
 import types
 
-from src.htmlnode import HTMLNode, LeafNode, ParentNode
+from src.htmlnode import HTMLNode, VoidNode, LeafNode, ParentNode
 import src.errors as errors
 
 class _HTMLTestNode(HTMLNode):
     '''minimal concrete subclass for testing shared HTMLNode behavior'''
-    def iter_html(self):
+    def iter_html(self, use_escape = None):
         '''includes a stub render implementation so tests remain
         compatible if the render hook becomes abstract'''
-        super().iter_html()
+        super().iter_html(use_escape = use_escape)
 
 INITIAL_ESC_DEFAULT = HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR
-INITIAL_VOID_DEFAULT = LeafNode.VOID_TAG_HANDLING
+INITIAL_VOID_DEFAULT = VoidNode.VOID_TAG_HANDLING
 
 class TestHTMLNode(unittest.TestCase):
     
@@ -123,6 +123,116 @@ class TestHTMLNode(unittest.TestCase):
                    }
         )
         self.assertEqual(node._close_tag(),"</a>")
+
+class TestVoidNode(unittest.TestCase):
+    def setUp(self):
+        VoidNode.VOID_TAG_HANDLING = True
+
+    def tearDown(self):
+        VoidNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
+    
+    def test_repr(self):
+        '''confirm that children and value are not included in VoidNode __repr__'''
+
+        # Verifying  !r formatting in __repr__
+        node = VoidNode.image(source="logo.png", alt_text="")
+
+        # Strings are wrapped in quotes because of the !r flag
+        expected = "VoidNode(tag='img', props={'src': 'logo.png', 'alt': ''})"
+        self.assertEqual(repr(node), expected)
+
+    def test_no_tag(self):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+            node = VoidNode(tag=None)
+
+    def test_empty_tag(self):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+            node = VoidNode(tag="")
+
+    def test_image_tag(self):
+        node = VoidNode.image(source="logo.png", alt_text="")
+        expected = '<img src="logo.png" alt="">'
+
+        self.assertEqual(node.to_html(), expected)
+
+    def test_image_no_source(self):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+            VoidNode.image(source=None)
+
+    def test_image_empty_source(self):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+            VoidNode.image(source="")
+
+    def test_image_no_alt(self):
+        node = VoidNode.image(source="logo.png")
+        expected = '<img src="logo.png">'
+
+        self.assertEqual(node.to_html(), expected)
+
+    def test_image_props(self):
+        node = VoidNode.image(source="logo.png", other_props={"width": "200"})
+        expected = {'src': 'logo.png', 'width': "200"}
+
+        self.assertEqual(node.props, expected)
+
+    def test_image_extra_src(self):
+        with self.assertRaises(errors.HTMLNodePropConflict):
+             VoidNode.image(source="logo.png", other_props={"SRC": "image.png"})
+
+    def test_image_extra_alt(self):
+        with self.assertRaises(errors.HTMLNodePropConflict):
+             VoidNode.image(source="logo.png", other_props={"Alt": "alt text"})
+
+    def test_image_bad_prop_type(self):
+        with self.assertRaises(errors.HTMLNodePropTypeError):
+            node = VoidNode.image(source="logo.png", other_props={"width": 200})
+
+    def test_image_bad_prop_dict(self):
+        with self.assertRaises(errors.HTMLNodePropError):
+            node = VoidNode.image(source="logo.png", other_props='"width": 200')
+
+    def test_hr_tag(self):
+        node = VoidNode.hr()
+        expected = '<hr>'
+
+        self.assertEqual(node.to_html(), expected)
+
+    def test_br_tag(self):
+        node = VoidNode.br()
+        expected = '<br>'
+
+        self.assertEqual(node.to_html(), expected)
+
+class TestVoidNodeCompatibility(unittest.TestCase):
+    def setUp(self):
+        VoidNode.VOID_TAG_HANDLING = False
+
+    def tearDown(self):
+        VoidNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
+    
+    def test_image_tag(self):
+        node = VoidNode.image(source="logo.png", alt_text="")
+        expected = '<img src="logo.png" alt=""></img>'
+
+        self.assertEqual(node.to_html(), expected)
+
+    def test_image_no_alt(self):
+        node = VoidNode.image(source="logo.png")
+        expected = '<img src="logo.png"></img>'
+
+        self.assertEqual(node.to_html(), expected)
+
+    def test_hr_tag(self):
+        node = VoidNode.hr()
+        expected = '<hr></hr>'
+
+        self.assertEqual(node.to_html(), expected)
+
+    def test_br_tag(self):
+        node = VoidNode.br()
+        expected = '<br></br>'
+
+        self.assertEqual(node.to_html(), expected)
 
 class TestLeafNode(unittest.TestCase):
     def test_leaf_to_html_p(self):

@@ -71,6 +71,22 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
         return ("".join(self._iter_props_to_html(use_escape = use_escape))
                 if self.props else ""
         )
+    
+    @classmethod #factory support
+    def _check_props(self,
+                     protected: list[str],
+                     props_to_check: dict[str, str]
+     ) -> None:
+        '''Checks for issues and conflicting props keys in factory methods'''
+        normalised_protected = [prop.lower() for prop in protected]
+        if not isinstance(props_to_check, dict):
+            raise errors.HTMLNodePropError(message = "Props not passed within dict")        
+        for prop in props_to_check:
+            if prop.lower() in normalised_protected:
+                raise errors.HTMLNodePropConflict(prop = prop)
+            if not isinstance(props_to_check[prop], str):
+                raise errors.HTMLNodePropTypeError(prop = prop)
+
 
 class VoidNode(HTMLNode):
     __slots__ = ()
@@ -104,7 +120,47 @@ class VoidNode(HTMLNode):
     def iter_html(self, use_escape: bool | None = None) -> Iterator[str]:
         self._validate()
         yield from self._open_tag(use_escape = use_escape)
-       
+
+    ## VoidNode Factory Methods
+    @classmethod
+    def image(self,
+              source: str,
+              alt_text: str | None = None,
+              other_props: dict[str, str] | None = None
+              ) -> VoidNode:
+
+        if source is None or source == "":
+            raise errors.HTMLNodeMissingAttributeError(attribute = "image source")
+        
+        
+        tag = "img"
+        props = {"src": source}
+        if alt_text is not None:
+            props["alt"] = alt_text
+        
+        if other_props:
+            protected = ["src", "alt"]
+            self._check_props(protected = protected, props_to_check = other_props)
+            props.update(other_props)
+
+        if not self.VOID_TAG_HANDLING:
+            return LeafNode.from_void(tag = tag, props = props)
+        return VoidNode(tag = tag, props = props)
+    
+    @classmethod
+    def hr(self):
+        tag = "hr"
+        if not self.VOID_TAG_HANDLING:
+            return LeafNode.from_void(tag = tag)
+        return VoidNode(tag = tag)
+
+    @classmethod
+    def br(self):
+        tag = "br"
+        if not self.VOID_TAG_HANDLING:
+            return LeafNode.from_void(tag = tag)
+        return VoidNode(tag = tag)
+
 
 class LeafNode(HTMLNode):
     __slots__ = ()
@@ -159,6 +215,18 @@ class LeafNode(HTMLNode):
             ):
                 parts.append(f"</{self.tag}>")
             return "".join(parts)
+    
+    @classmethod
+    def from_void(
+        self,
+        tag: str, props: dict[str, str] | None = None
+        ) -> LeafNode:
+        '''Compatibility Helper'''
+        return LeafNode(
+            tag = tag,
+            value = "",
+            props = props
+        )
 
 class ParentNode(HTMLNode):
     __slots__ = ()
