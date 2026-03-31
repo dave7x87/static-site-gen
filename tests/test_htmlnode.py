@@ -143,11 +143,11 @@ class TestVoidNode(unittest.TestCase):
 
     def test_no_tag(self):
         with self.assertRaises(errors.HTMLNodeMissingAttributeError):
-            node = VoidNode(tag=None)
+            VoidNode(tag=None)
 
     def test_empty_tag(self):
         with self.assertRaises(errors.HTMLNodeMissingAttributeError):
-            node = VoidNode(tag="")
+            VoidNode(tag="")
 
     def test_image_tag(self):
         node = VoidNode.image(source="logo.png", alt_text="")
@@ -185,11 +185,11 @@ class TestVoidNode(unittest.TestCase):
 
     def test_image_bad_prop_type(self):
         with self.assertRaises(errors.HTMLNodePropTypeError):
-            node = VoidNode.image(source="logo.png", other_props={"width": 200})
+            VoidNode.image(source="logo.png", other_props={"width": 200})
 
     def test_image_bad_prop_dict(self):
         with self.assertRaises(errors.HTMLNodePropError):
-            node = VoidNode.image(source="logo.png", other_props='"width": 200')
+            VoidNode.image(source="logo.png", other_props='"width": 200')
 
     def test_hr_tag(self):
         node = VoidNode.hr()
@@ -328,7 +328,7 @@ class TestParentNode(unittest.TestCase):
             "ParentNode must have tag"
             ):
             child = LeafNode("b", "text")
-            node = ParentNode(None,[child])
+            ParentNode(None,[child])
 
     def test_empty_tag(self):
         with self.assertRaisesRegex(
@@ -336,7 +336,7 @@ class TestParentNode(unittest.TestCase):
             "ParentNode must have tag"
             ):
             child = LeafNode("b", "text")
-            node = ParentNode("",[child])
+            ParentNode("",[child])
 
     def test_no_children(self):
         with self.assertRaisesRegex(
@@ -350,14 +350,14 @@ class TestParentNode(unittest.TestCase):
             ValueError,
             "ParentNode must have list of children"
             ):
-            node = ParentNode("b", [])
+            ParentNode("b", [])
 
     def test_unlisted_children(self):
         with self.assertRaisesRegex(
             ValueError,
             "ParentNode must have list of children"
             ):
-            node = ParentNode("b", LeafNode(tag="", value=""))
+            ParentNode("b", LeafNode(tag="", value=""))
 
 class TestNodesSafeMode(unittest.TestCase):
     def setUp(self):
