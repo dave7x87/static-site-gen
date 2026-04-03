@@ -34,27 +34,22 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
         )
         return output
     
-    def to_html(self, use_escape: bool | None = None) -> str:    
-        '''use_escape is used by sub-classes for HTML escaping (optional)'''
-        return "".join(self.iter_html(use_escape = use_escape))
+    def to_html(self) -> str:    
+        return "".join(self.iter_html())
     
     #@abstractmethod #currently disallowed by spec
-    def iter_html(self, use_escape: bool | None = None) -> Iterator[str]:
+    def iter_html(self) -> Iterator[str]:
         raise NotImplementedError("iter_html method not implemented")
     
-    def _iter_props_to_html(self, use_escape: bool | None = None) -> Iterator[str]:
-        '''Yields html property fragments.
-        May yield zero fragments if no props assigned
-        use_escape (deprecated) once defined behaviour of html escaping.
-        no longer used but currently still accepted for compatibility with other nodes'''
+    def _iter_props_to_html(self) -> Iterator[str]:
+        '''Yields html property fragments. May yield zero fragments if no props assigned'''
 
         if self.props:
             yield from (f' {k}="{self._escape_text(v)}"'for k, v in self.props.items())
 
-    def _open_tag(self, use_escape: bool | None = None) -> Iterator[str]:
-        '''use_escape defines optional html escape behaviour'''
+    def _open_tag(self) -> Iterator[str]:
         yield f"<{self.tag}"
-        yield from self._iter_props_to_html(use_escape = use_escape)
+        yield from self._iter_props_to_html()
         yield ">"
 
     def _escape_text(self, text: str) -> str:
@@ -69,9 +64,8 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
     def _invalid_tag(self) -> bool:
         return self.tag is None or self.tag == ""
 
-    def props_to_html(self, use_escape: bool | None = None) -> str:
-        '''use_escape defines optional html escape behaviour'''
-        return ("".join(self._iter_props_to_html(use_escape = use_escape))
+    def props_to_html(self) -> str:
+        return ("".join(self._iter_props_to_html())
                 if self.props else ""
         )
     
@@ -81,9 +75,12 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
                      props_to_check: dict[str, str]
      ) -> None:
         '''Checks for issues and conflicting props keys in factory methods'''
+        
         normalised_protected = [prop.lower() for prop in protected]
+        
         if not isinstance(props_to_check, dict):
             raise errors.HTMLNodePropError(message = "Props not passed within dict")        
+        
         for prop in props_to_check:
             if prop.lower() in normalised_protected:
                 raise errors.HTMLNodePropConflict(prop = prop)
@@ -120,9 +117,9 @@ class VoidNode(HTMLNode):
         if self._invalid_tag():
             raise errors.HTMLNodeMissingAttributeError(attribute="tag")
         
-    def iter_html(self, use_escape: bool | None = None) -> Iterator[str]:
+    def iter_html(self) -> Iterator[str]:
         self._validate()
-        yield from self._open_tag(use_escape = use_escape)
+        yield from self._open_tag()
 
     ## VoidNode Compatibility helper method
     @classmethod
@@ -159,13 +156,11 @@ class VoidNode(HTMLNode):
     
     @classmethod
     def hr(cls):
-        tag = "hr"
-        return cls._compat_from_void(tag=tag)
+        return cls._compat_from_void(tag="hr")
 
     @classmethod
     def br(cls):
-        tag = "br"
-        return cls._compat_from_void(tag=tag)
+        return cls._compat_from_void(tag="br")
 
 
 class LeafNode(HTMLNode):
@@ -198,13 +193,13 @@ class LeafNode(HTMLNode):
         if self.value is None:
             raise errors.HTMLNodeMissingAttributeError(attribute="value")
     
-    def iter_html(self, use_escape: bool | None = None) -> Iterator[str]:
+    def iter_html(self) -> Iterator[str]:
         self._validate()
         
         if self._invalid_tag():
             yield self._escape_text(self.value)
         else:
-            yield from self._open_tag(use_escape = use_escape)
+            yield from self._open_tag()
             yield self._escape_text(self.value)
             yield self._close_tag()
     
@@ -282,26 +277,16 @@ class ParentNode(HTMLNode):
         if self._invalid_tag():
             raise errors.HTMLNodeMissingAttributeError(attribute="tag")
         if not isinstance(self.children, list) or len(self.children) == 0:
-            raise errors.HTMLNodeChildrenListError
+            raise errors.HTMLNodeChildrenListError()
         bad_children = [child for child in self.children if not isinstance(child, HTMLNode)]
         if bad_children:
             raise errors.HTMLNodeChildrenTypeError(children = bad_children)
         
-    def to_html(self, use_escape: bool | None = None):
-        self._validate()
+    def iter_html(self) -> Iterator[str]:
         
-        if use_escape is None:
-            use_escape = self.USE_HTML_ESCAPE
-                
-        components = []
-
-        # We use props_to_html() to get the string of attributes
-        props_str = self.props_to_html(use_escape)
-        components.append(f"<{self.tag}{props_str}>")
-
+        self._validate()
+        yield from self._open_tag()
         for child in self.children:
-            components.append(child.to_html(use_escape))
+            yield from child.iter_html()
+        yield self._close_tag()
 
-        components.append(f"</{self.tag}>")
-
-        return "".join(components)

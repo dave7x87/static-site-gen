@@ -6,10 +6,10 @@ import src.errors as errors
 
 class _HTMLTestNode(HTMLNode):
     '''minimal concrete subclass for testing shared HTMLNode behavior'''
-    def iter_html(self, use_escape = None):
+    def iter_html(self):
         '''includes a stub render implementation so tests remain
         compatible if the render hook becomes abstract'''
-        super().iter_html(use_escape = use_escape)
+        super().iter_html()
 
 INITIAL_ESC_DEFAULT = HTMLNode.USE_HTML_ESCAPE
 INITIAL_VOID_DEFAULT = VoidNode.VOID_TAG_HANDLING
@@ -41,7 +41,7 @@ class TestHTMLNode(unittest.TestCase):
         self.assertEqual(test.props_to_html(), expected)
 
     def test_props_to_html_default(self):
-        # Testing the default (unescaped) behavior for the autograder
+        # Testing the default (unescaped) behavior
         node = _HTMLTestNode(
             tag="div",
             props={
@@ -96,8 +96,9 @@ class TestHTMLNode(unittest.TestCase):
                    }
         )
         result = node._open_tag()
+        expected = ['<a', ' href="http://boot.dev"', ' target="_blank"', '>']
         self.assertIsInstance(result, types.GeneratorType)
-        self.assertEqual("".join(result), '<a href="http://boot.dev" target="_blank">')
+        self.assertEqual(list(result), expected)
 
     def test_close_tag(self):
         node = _HTMLTestNode(
@@ -187,6 +188,13 @@ class TestVoidNode(unittest.TestCase):
         expected = '<br>'
 
         self.assertEqual(node.to_html(), expected)
+
+    def test_iter_html(self):
+        result = VoidNode.image(source="logo.png").iter_html()
+        expected = ['<img', ' src="logo.png"', '>']
+        self.assertIsInstance(result, types.GeneratorType)
+        self.assertEqual(list(result), expected)
+
 
 class TestVoidNodeCompatibility(unittest.TestCase):
     def setUp(self):
@@ -348,6 +356,12 @@ class TestLeafNode(unittest.TestCase):
             text= "boot.dev",
             other_props='"width": 200'
         )
+            
+    def test_iter_html(self):
+        result = LeafNode.link(url="www.google.com", text="link").iter_html()
+        expected = ['<a', ' href="www.google.com"', '>', 'link', '</a>']
+        self.assertIsInstance(result, types.GeneratorType)
+        self.assertEqual(list(result), expected)
 
 
 class TestParentNode(unittest.TestCase):
@@ -382,13 +396,11 @@ class TestParentNode(unittest.TestCase):
 
     def test_no_tag(self):
         with self.assertRaises(errors.HTMLNodeAttributeError):
-            child = LeafNode.bold("text")
-            ParentNode(None,[child])
+            ParentNode(None,[LeafNode.bold("text")])
 
     def test_empty_tag(self):
         with self.assertRaises(errors.HTMLNodeAttributeError):
-            child = LeafNode.bold("text")
-            ParentNode("",[child])
+            ParentNode("",[LeafNode.bold("text")])
 
     def test_no_children(self):
         with self.assertRaises(errors.HTMLNodeChildrenListError):
@@ -416,6 +428,14 @@ class TestParentNode(unittest.TestCase):
         with self.assertRaises(errors.HTMLNodeChildrenTypeError) as cm:
             ParentNode("div", good_children + bad_children)
         self.assertEqual(cm.exception.children, bad_children)
+
+    def test_iter_html(self):
+        child_node = LeafNode("span", "child")
+        parent_node = ParentNode("div", [child_node])
+        result = parent_node.iter_html()
+        expected = ['<div', '>', '<span', '>', 'child', '</span>', '</div>']
+        self.assertIsInstance(result, types.GeneratorType)
+        self.assertEqual(list(result), expected)
 
 class TestNodesSafeMode(unittest.TestCase):
     def setUp(self):
@@ -474,7 +494,7 @@ class TestNodesSafeModeOff(unittest.TestCase):
         expected = (' href="https://www.google.com?q=fish&amp;chips" '
                     'title="The &quot;Great&quot; Gatsby"'
         )
-        self.assertEqual(node.props_to_html(use_escape=True), expected)
+        self.assertEqual(node.props_to_html(), expected)
     
     def test_escape(self):
         child_node = LeafNode(
