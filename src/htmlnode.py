@@ -262,6 +262,7 @@ class LeafNode(HTMLNode):
 
 class ParentNode(HTMLNode):
     __slots__ = ()
+    
     def __init__(self,
                  tag : str,
                  children: list[HTMLNode],
@@ -279,9 +280,12 @@ class ParentNode(HTMLNode):
         to meet spec and guard against outside mutation'''
 
         if self._invalid_tag():
-            raise ValueError("ParentNode must have tag")
+            raise errors.HTMLNodeMissingAttributeError(attribute="tag")
         if not isinstance(self.children, list) or len(self.children) == 0:
-            raise ValueError("ParentNode must have list of children")
+            raise errors.HTMLNodeChildrenListError
+        bad_children = [child for child in self.children if not isinstance(child, HTMLNode)]
+        if bad_children:
+            raise errors.HTMLNodeChildrenTypeError(children = bad_children)
         
     def to_html(self, use_escape: bool | None = None):
         self._validate()

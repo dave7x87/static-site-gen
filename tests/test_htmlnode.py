@@ -359,7 +359,7 @@ class TestParentNode(unittest.TestCase):
                      )
 
     def test_to_html_with_grandchildren(self):
-        grandchild_node = LeafNode("b", "grandchild")
+        grandchild_node = LeafNode.bold("grandchild")
         child_node = ParentNode("span", [grandchild_node])
         parent_node = ParentNode("div", [child_node])
         self.assertEqual(
@@ -368,7 +368,7 @@ class TestParentNode(unittest.TestCase):
         )
 
     def test_repr_with_grandchildren(self):
-        grandchild_node = LeafNode("b", "grandchild")
+        grandchild_node = LeafNode.bold("grandchild")
         child_node = ParentNode("span", [grandchild_node])
         parent_node = ParentNode("div", [child_node])
 
@@ -381,41 +381,41 @@ class TestParentNode(unittest.TestCase):
         self.assertEqual(repr(parent_node), expected)
 
     def test_no_tag(self):
-        with self.assertRaisesRegex(
-            ValueError,
-            "ParentNode must have tag"
-            ):
-            child = LeafNode("b", "text")
+        with self.assertRaises(errors.HTMLNodeAttributeError):
+            child = LeafNode.bold("text")
             ParentNode(None,[child])
 
     def test_empty_tag(self):
-        with self.assertRaisesRegex(
-            ValueError,
-            "ParentNode must have tag"
-            ):
-            child = LeafNode("b", "text")
+        with self.assertRaises(errors.HTMLNodeAttributeError):
+            child = LeafNode.bold("text")
             ParentNode("",[child])
 
     def test_no_children(self):
-        with self.assertRaisesRegex(
-            ValueError,
-            "ParentNode must have list of children"
-            ):
+        with self.assertRaises(errors.HTMLNodeChildrenListError):
             ParentNode("b", None)
 
     def test_empty_children(self):
-        with self.assertRaisesRegex(
-            ValueError,
-            "ParentNode must have list of children"
-            ):
+        with self.assertRaises(errors.HTMLNodeChildrenListError):
             ParentNode("b", [])
 
     def test_unlisted_children(self):
-        with self.assertRaisesRegex(
-            ValueError,
-            "ParentNode must have list of children"
-            ):
-            ParentNode("b", LeafNode(tag="", value=""))
+        with self.assertRaises(errors.HTMLNodeChildrenListError):
+            ParentNode("b", LeafNode.text("text"))
+
+    def test_bad_children(self):
+        good_children = [
+            VoidNode.br(),
+            LeafNode.code("code!")
+        ]
+        bad_children = [ 
+            "String",
+            42.0,
+            69
+        ]
+
+        with self.assertRaises(errors.HTMLNodeChildrenTypeError) as cm:
+            ParentNode("div", good_children + bad_children)
+        self.assertEqual(cm.exception.children, bad_children)
 
 class TestNodesSafeMode(unittest.TestCase):
     def setUp(self):

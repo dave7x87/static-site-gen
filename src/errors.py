@@ -27,10 +27,11 @@ class TextNodeTypeError(TextNodeError):
                 message: str | None = None,
                 text_type: str | TextType | None = None,
                 ) -> None:
+        self.text_type = text_type
         if message is None:
             message = self.get_default_message()
             if text_type:
-                message = f"{message}: (type:{text_type})"
+                message = f"{message}: (type:{self.text_type})"
         super().__init__(message)
 
 class TextNodeNoURL(TextNodeTypeError):
@@ -51,10 +52,11 @@ class HTMLNodeAttributeError(HTMLNodeError):
                 message: str | None = None,
                 attribute: str | None = None,
                 ) -> None:
+        self.attribute = attribute
         if message is None:
             message = self.get_default_message()
             if attribute:
-                message = f"{message}: (attribute:{attribute})"
+                message = f"{message}: (attribute:{self.attribute})"
         super().__init__(message)
     
     
@@ -70,10 +72,11 @@ class HTMLNodePropError(HTMLNodeError):
                 message: str | None = None,
                 prop: str | None = None,
                 ) -> None:
+        self.prop = prop
         if message is None:
             message = self.get_default_message()
             if prop:
-                message = f"{message}: (prop:{prop})"
+                message = f"{message}: (prop:{self.prop})"
         super().__init__(message)
 
 class HTMLNodePropConflict(HTMLNodePropError):
@@ -84,3 +87,25 @@ class HTMLNodePropTypeError(HTMLNodePropError):
     def get_default_message(self) -> str:
         return "Prop provided is wrong type"
 
+class HTMLNodeChildrenError(HTMLNodeError):
+    def get_default_message(self) -> str:
+        return "Error with HTMLNode children"
+    
+    def __init__(self,
+                message: str | None = None,
+                children: list[str] | str | None = None,
+                ) -> None:
+        self.children = children
+        if message is None:
+            message = self.get_default_message()
+            if children:
+                message = f"{message}: (children:{self.children})"
+        super().__init__(message)
+
+class HTMLNodeChildrenTypeError(HTMLNodeChildrenError):
+    def get_default_message(self) -> str:
+        return "Provided children are not HTMLNodes"
+    
+class HTMLNodeChildrenListError(HTMLNodeChildrenError):
+    def get_default_message(self) -> str:
+        return "Must supply children in a list"  
