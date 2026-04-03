@@ -348,11 +348,11 @@ class TestNodesSafeMode(unittest.TestCase):
     def setUp(self):
         # Force "test mode" before every test
         HTMLNode.USE_HTML_ESCAPE = False
-        LeafNode.VOID_TAG_HANDLING = False
+        VoidNode.VOID_TAG_HANDLING = False
 
     def tearDown(self):
         HTMLNode.USE_HTML_ESCAPE = INITIAL_ESC_DEFAULT
-        LeafNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
+        VoidNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
 
     def test_no_escape(self):
         child_node = LeafNode(
@@ -372,13 +372,9 @@ class TestNodesSafeMode(unittest.TestCase):
         self.assertEqual(node.to_html(), expected)
 
     def test_no_void(self):
-        node = LeafNode(
-            tag="img",
-            value="",
-            props={
-                "src": "https://www.google.com/google.jpg",
-                "alt": "Google Logo"
-            }
+        node = VoidNode.image(
+            source="https://www.google.com/google.jpg",
+            alt_text="Google Logo"
         )
         expected = '<img src="https://www.google.com/google.jpg" alt="Google Logo"></img>'
         self.assertEqual(node.to_html(), expected)
@@ -386,11 +382,11 @@ class TestNodesSafeMode(unittest.TestCase):
 class TestNodesSafeModeOff(unittest.TestCase):
     def setUp(self):
         HTMLNode.USE_HTML_ESCAPE = True
-        LeafNode.VOID_TAG_HANDLING = True
+        VoidNode.VOID_TAG_HANDLING = True
 
     def tearDown(self):
         HTMLNode.USE_HTML_ESCAPE = INITIAL_ESC_DEFAULT
-        LeafNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
+        VoidNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
 
     def test_props_to_html_escaped(self):
         # Testing safeguard
@@ -425,13 +421,9 @@ class TestNodesSafeModeOff(unittest.TestCase):
         self.assertEqual(node.to_html(), expected)
 
     def test_void(self):
-        node = LeafNode(
-            tag="img",
-            value="",
-            props={
-                "src": "https://www.google.com/google.jpg",
-                "alt": "Google Logo"
-            }
+        node = VoidNode.image(
+            source="https://www.google.com/google.jpg",
+            alt_text="Google Logo"
         )
         expected = '<img src="https://www.google.com/google.jpg" alt="Google Logo">'
         self.assertEqual(node.to_html(), expected)

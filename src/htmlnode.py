@@ -172,9 +172,6 @@ class VoidNode(HTMLNode):
 class LeafNode(HTMLNode):
     __slots__ = ()
 
-    VOID_TAG_HANDLING = VoidNode.VOID_TAG_HANDLING #Short term compatibility helper pending refactor
-    void_tags = {"img", "br", "hr"}
-
     def __init__(self,
                  tag: str | None,
                  value: str,
@@ -202,26 +199,15 @@ class LeafNode(HTMLNode):
         if self.value is None:
             raise errors.HTMLNodeMissingAttributeError(attribute="value")
     
-    def to_html(self, use_escape: bool | None = None):
-        if use_escape is None:
-            use_escape = self.USE_HTML_ESCAPE
-        
-        if self.value is None:
-            raise ValueError("Leaf Node MUST have a value")
+    def iter_html(self, use_escape: bool | None = None) -> Iterator[str]:
+        self._validate()
         
         if self._invalid_tag():
-            return self.value
-        
+            yield self._escape_text(self.value)
         else:
-            parts = [f"<{self.tag}",
-                    f"{self.props_to_html(use_escape)}>",
-                    f"{escape(self.value) if use_escape else self.value}",
-                    ]
-            if (not self.VOID_TAG_HANDLING
-                or self.tag not in self.void_tags
-            ):
-                parts.append(f"</{self.tag}>")
-            return "".join(parts)
+            yield from self._open_tag(use_escape = use_escape)
+            yield self._escape_text(self.value)
+            yield self._close_tag()
     
     @classmethod
     def from_void(
