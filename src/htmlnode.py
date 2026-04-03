@@ -96,7 +96,7 @@ class VoidNode(HTMLNode):
     VOID_TAG_HANDLING = False
 
     def __init__(self,
-                 tag: str | None,
+                 tag: str,
                  props: dict[str, str] | None = None
                  ) -> None:
         super().__init__(tag = tag, props = props)
@@ -121,6 +121,18 @@ class VoidNode(HTMLNode):
         self._validate()
         yield from self._open_tag(use_escape = use_escape)
 
+    ## VoidNode Compatibility helper method
+    @classmethod
+    def _compat_from_void(
+        self,
+        tag: str,
+        props: dict[str, str] | None = None
+    ):
+        if not self.VOID_TAG_HANDLING:
+            return LeafNode.from_void(tag = tag, props = props)
+        return VoidNode(tag = tag, props = props)
+    
+    
     ## VoidNode Factory Methods
     @classmethod
     def image(self,
@@ -143,23 +155,17 @@ class VoidNode(HTMLNode):
             self._check_props(protected = protected, props_to_check = other_props)
             props.update(other_props)
 
-        if not self.VOID_TAG_HANDLING:
-            return LeafNode.from_void(tag = tag, props = props)
-        return VoidNode(tag = tag, props = props)
+        return VoidNode._compat_from_void(tag=tag, props=props)
     
     @classmethod
     def hr(self):
         tag = "hr"
-        if not self.VOID_TAG_HANDLING:
-            return LeafNode.from_void(tag = tag)
-        return VoidNode(tag = tag)
+        return VoidNode._compat_from_void(tag=tag)
 
     @classmethod
     def br(self):
         tag = "br"
-        if not self.VOID_TAG_HANDLING:
-            return LeafNode.from_void(tag = tag)
-        return VoidNode(tag = tag)
+        return VoidNode._compat_from_void(tag=tag)
 
 
 class LeafNode(HTMLNode):
