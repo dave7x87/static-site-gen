@@ -10,9 +10,9 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
     # All additional behaviour currently defaults to off
     # to ensure compatibility with external tests 
     
-    # Set Default HTML Escape Behaviour if not specified.
+    # Set HTML Escape Behaviour
     # (i.e. convert characters which may cause HTML issues)
-    DEFAULT_ESCAPE_BEHAVIOUR = False
+    USE_HTML_ESCAPE = False
 
     def __init__(self,
                  tag: str | None = None,
@@ -45,14 +45,11 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
     def _iter_props_to_html(self, use_escape: bool | None = None) -> Iterator[str]:
         '''Yields html property fragments.
         May yield zero fragments if no props assigned
-        use_escape (optional) defines if html escaping is enabled'''
-        if use_escape is None:
-            use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
+        use_escape (deprecated) once defined behaviour of html escaping.
+        no longer used but currently still accepted for compatibility with other nodes'''
 
         if self.props:
-            yield from (f' {k}="{escape(v) if use_escape else v}"'
-                    for k,v in self.props.items()
-            )
+            yield from (f' {k}="{self._escape_text(v)}"'for k, v in self.props.items())
 
     def _open_tag(self, use_escape: bool | None = None) -> Iterator[str]:
         '''use_escape defines optional html escape behaviour'''
@@ -60,6 +57,12 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
         yield from self._iter_props_to_html(use_escape = use_escape)
         yield ">"
 
+    def _escape_text(self, text: str) -> str:
+        '''checks compatibility flag and handles escaping text'''
+        return (escape(text) if self.USE_HTML_ESCAPE
+                else text
+        )
+    
     def _close_tag(self) -> str:
         return f"</{self.tag}>"
 
@@ -131,8 +134,7 @@ class VoidNode(HTMLNode):
         if not self.VOID_TAG_HANDLING:
             return LeafNode.from_void(tag = tag, props = props)
         return VoidNode(tag = tag, props = props)
-    
-    
+     
     ## VoidNode Factory Methods
     @classmethod
     def image(self,
@@ -143,7 +145,6 @@ class VoidNode(HTMLNode):
 
         if source is None or source == "":
             raise errors.HTMLNodeMissingAttributeError(attribute = "image source")
-        
         
         tag = "img"
         props = {"src": source}
@@ -203,7 +204,7 @@ class LeafNode(HTMLNode):
     
     def to_html(self, use_escape: bool | None = None):
         if use_escape is None:
-            use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
+            use_escape = self.USE_HTML_ESCAPE
         
         if self.value is None:
             raise ValueError("Leaf Node MUST have a value")
@@ -261,7 +262,7 @@ class ParentNode(HTMLNode):
         self._validate()
         
         if use_escape is None:
-            use_escape = self.DEFAULT_ESCAPE_BEHAVIOUR
+            use_escape = self.USE_HTML_ESCAPE
                 
         components = []
 

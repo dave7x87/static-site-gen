@@ -11,7 +11,7 @@ class _HTMLTestNode(HTMLNode):
         compatible if the render hook becomes abstract'''
         super().iter_html(use_escape = use_escape)
 
-INITIAL_ESC_DEFAULT = HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR
+INITIAL_ESC_DEFAULT = HTMLNode.USE_HTML_ESCAPE
 INITIAL_VOID_DEFAULT = VoidNode.VOID_TAG_HANDLING
 
 class TestHTMLNode(unittest.TestCase):
@@ -52,21 +52,6 @@ class TestHTMLNode(unittest.TestCase):
         # Should NOT escape the & or the "
         expected = ' href="https://www.google.com?q=fish&chips" title="The "Great" Gatsby"'
         self.assertEqual(node.props_to_html(), expected)
-
-    def test_props_to_html_escaped(self):
-        # Testing safeguard
-        node = _HTMLTestNode(
-            tag="div",
-            props={
-                "href": "https://www.google.com?q=fish&chips",
-                "title": 'The "Great" Gatsby',
-            },
-        )
-        # Should escape & to &amp; and " to &quot;
-        expected = (' href="https://www.google.com?q=fish&amp;chips" '
-                    'title="The &quot;Great&quot; Gatsby"'
-        )
-        self.assertEqual(node.props_to_html(use_escape=True), expected)
 
     def test_props_to_html_no_props(self):
         # Testing the edge case of None or empty props
@@ -362,11 +347,11 @@ class TestParentNode(unittest.TestCase):
 class TestNodesSafeMode(unittest.TestCase):
     def setUp(self):
         # Force "test mode" before every test
-        HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR = False
+        HTMLNode.USE_HTML_ESCAPE = False
         LeafNode.VOID_TAG_HANDLING = False
 
     def tearDown(self):
-        HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR = INITIAL_ESC_DEFAULT
+        HTMLNode.USE_HTML_ESCAPE = INITIAL_ESC_DEFAULT
         LeafNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
 
     def test_no_escape(self):
@@ -400,13 +385,28 @@ class TestNodesSafeMode(unittest.TestCase):
 
 class TestNodesSafeModeOff(unittest.TestCase):
     def setUp(self):
-        HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR = True
+        HTMLNode.USE_HTML_ESCAPE = True
         LeafNode.VOID_TAG_HANDLING = True
 
     def tearDown(self):
-        HTMLNode.DEFAULT_ESCAPE_BEHAVIOUR = INITIAL_ESC_DEFAULT
+        HTMLNode.USE_HTML_ESCAPE = INITIAL_ESC_DEFAULT
         LeafNode.VOID_TAG_HANDLING = INITIAL_VOID_DEFAULT
 
+    def test_props_to_html_escaped(self):
+        # Testing safeguard
+        node = _HTMLTestNode(
+            tag="div",
+            props={
+                "href": "https://www.google.com?q=fish&chips",
+                "title": 'The "Great" Gatsby',
+            },
+        )
+        # Should escape & to &amp; and " to &quot;
+        expected = (' href="https://www.google.com?q=fish&amp;chips" '
+                    'title="The &quot;Great&quot; Gatsby"'
+        )
+        self.assertEqual(node.props_to_html(use_escape=True), expected)
+    
     def test_escape(self):
         child_node = LeafNode(
             tag="a",
