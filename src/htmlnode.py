@@ -76,7 +76,7 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
         )
     
     @classmethod #factory support
-    def _check_props(self,
+    def _check_props(cls,
                      protected: list[str],
                      props_to_check: dict[str, str]
      ) -> None:
@@ -127,17 +127,17 @@ class VoidNode(HTMLNode):
     ## VoidNode Compatibility helper method
     @classmethod
     def _compat_from_void(
-        self,
+        cls,
         tag: str,
         props: dict[str, str] | None = None
-    ):
-        if not self.VOID_TAG_HANDLING:
+    ) -> VoidNode | LeafNode :
+        if not cls.VOID_TAG_HANDLING:
             return LeafNode.from_void(tag = tag, props = props)
-        return VoidNode(tag = tag, props = props)
+        return cls(tag = tag, props = props)
      
     ## VoidNode Factory Methods
     @classmethod
-    def image(self,
+    def image(cls,
               source: str,
               alt_text: str | None = None,
               other_props: dict[str, str] | None = None
@@ -146,27 +146,26 @@ class VoidNode(HTMLNode):
         if source is None or source == "":
             raise errors.HTMLNodeMissingAttributeError(attribute = "image source")
         
-        tag = "img"
         props = {"src": source}
         if alt_text is not None:
             props["alt"] = alt_text
         
         if other_props:
             protected = ["src", "alt"]
-            self._check_props(protected = protected, props_to_check = other_props)
+            cls._check_props(protected = protected, props_to_check = other_props)
             props.update(other_props)
 
-        return VoidNode._compat_from_void(tag=tag, props=props)
+        return cls._compat_from_void(tag="img", props=props)
     
     @classmethod
-    def hr(self):
+    def hr(cls):
         tag = "hr"
-        return VoidNode._compat_from_void(tag=tag)
+        return cls._compat_from_void(tag=tag)
 
     @classmethod
-    def br(self):
+    def br(cls):
         tag = "br"
-        return VoidNode._compat_from_void(tag=tag)
+        return cls._compat_from_void(tag=tag)
 
 
 class LeafNode(HTMLNode):
@@ -211,15 +210,55 @@ class LeafNode(HTMLNode):
     
     @classmethod
     def from_void(
-        self,
+        cls,
         tag: str, props: dict[str, str] | None = None
         ) -> LeafNode:
         '''Compatibility Helper'''
-        return LeafNode(
+        return cls(
             tag = tag,
             value = "",
             props = props
         )
+    
+    ## LeafNode Factory Methods
+
+    @classmethod
+    def text(cls, text: str) -> LeafNode:
+        return cls(tag=None, value=text)
+    
+    @classmethod
+    def bold(cls, text: str) -> LeafNode:
+        return cls(tag="b", value=text)
+    
+    @classmethod
+    def italic(cls, text: str) -> LeafNode:
+        return cls(tag="i", value=text)
+    
+    @classmethod
+    def code(cls, text: str) -> LeafNode:
+        return cls(tag="code", value=text)
+    
+    @classmethod
+    def link(cls,
+              url: str,
+              text: str,
+              other_props: dict[str, str] | None = None
+              ) -> LeafNode:
+
+        if url is None or url == "":
+            raise errors.HTMLNodeMissingAttributeError(attribute = "link URL")
+        
+        if text is None or text == "":
+            raise errors.HTMLNodeMissingAttributeError(attribute = "link text")
+        
+        props = {"href": url}
+        
+        if other_props:
+            protected = ["href"]
+            cls._check_props(protected = protected, props_to_check = other_props)
+            props.update(other_props)
+
+        return cls(tag="a", value=text, props=props)
 
 class ParentNode(HTMLNode):
     __slots__ = ()

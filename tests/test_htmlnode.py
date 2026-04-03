@@ -277,6 +277,79 @@ class TestLeafNode(unittest.TestCase):
         )
         self.assertEqual(repr(parent), expected)
 
+    def test_text(self):
+        text = "Just text here!"
+        self.assertEqual(LeafNode.text(text).to_html(), text)
+
+    def test_bold(self):
+        text = "Bold Text"
+        self.assertEqual(LeafNode.bold(text).to_html(), f"<b>{text}</b>")
+
+    def test_italic(self):
+        text = "Italic Text"
+        self.assertEqual(LeafNode.italic(text).to_html(), f"<i>{text}</i>")
+
+    def test_code(self):
+        text = "CODE HERE!"
+        self.assertEqual(LeafNode.code(text).to_html(), f"<code>{text}</code>")
+
+    def test_link_tag(self):
+        node = LeafNode.link(url="www.boot.dev", text= "boot.dev")
+        expected = '<a href="www.boot.dev">boot.dev</a>'
+
+        self.assertEqual(node.to_html(), expected)
+
+    def test_link_no_url(self):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+            LeafNode.link(url=None, text="link text")
+
+    def test_link_empty_url(self):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+            LeafNode.link(url="", text="link text")
+
+    def test_link_no_text(self):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+            LeafNode.link(url="www.boot.dev", text=None)
+
+    def test_link_empty_text(self):
+        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+            LeafNode.link(url="www.boot.dev", text="")
+
+    def test_link_props(self):
+        node = LeafNode.link(
+            url="www.boot.dev",
+            text= "boot.dev",
+            other_props={"target": "_blank"}
+        )
+        expected = {'href': 'www.boot.dev', 'target': '_blank'}
+
+        self.assertEqual(node.props, expected)
+
+    def test_link_extra_url(self):
+        with self.assertRaises(errors.HTMLNodePropConflict):
+            LeafNode.link(
+            url="www.boot.dev",
+            text= "boot.dev",
+            other_props={"HREF": "www.google.com"}
+        )
+
+    def test_link_bad_prop_type(self):
+        with self.assertRaises(errors.HTMLNodePropTypeError):
+            LeafNode.link(
+            url="www.boot.dev",
+            text= "boot.dev",
+            other_props={"width": 200}
+        )
+
+    def test_link_bad_prop_dict(self):
+        with self.assertRaises(errors.HTMLNodePropError):
+            LeafNode.link(
+            url="www.boot.dev",
+            text= "boot.dev",
+            other_props='"width": 200'
+        )
+
+
 class TestParentNode(unittest.TestCase):
     def test_to_html_with_children(self):
         child_node = LeafNode("span", "child")
@@ -328,7 +401,7 @@ class TestParentNode(unittest.TestCase):
             ValueError,
             "ParentNode must have list of children"
             ):
-            node = ParentNode("b", None)
+            ParentNode("b", None)
 
     def test_empty_children(self):
         with self.assertRaisesRegex(
