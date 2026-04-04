@@ -71,12 +71,12 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
     
     @classmethod #factory support
     def _check_props(cls,
-                     protected: list[str],
+                     protected: set[str],
                      props_to_check: dict[str, str]
      ) -> None:
         '''Checks for issues and conflicting props keys in factory methods'''
         
-        normalised_protected = [prop.lower() for prop in protected]
+        normalised_protected = {prop.lower() for prop in protected}
         
         if not isinstance(props_to_check, dict):
             raise errors.HTMLNodePropError(message = "Props not passed within dict")        
@@ -148,7 +148,7 @@ class VoidNode(HTMLNode):
             props["alt"] = alt_text
         
         if other_props:
-            protected = ["src", "alt"]
+            protected = {"src", "alt"}
             cls._check_props(protected = protected, props_to_check = other_props)
             props.update(other_props)
 
@@ -249,7 +249,7 @@ class LeafNode(HTMLNode):
         props = {"href": url}
         
         if other_props:
-            protected = ["href"]
+            protected = {"href"}
             cls._check_props(protected = protected, props_to_check = other_props)
             props.update(other_props)
 
