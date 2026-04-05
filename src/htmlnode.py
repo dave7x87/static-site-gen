@@ -54,26 +54,16 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
 
     def _escape_text(self, text: str) -> str:
         '''checks compatibility flag and handles escaping text'''
-        return (escape(text) if self.USE_HTML_ESCAPE
-                else text
-        )
+        return escape(text) if self.USE_HTML_ESCAPE else text
     
     def _close_tag(self) -> str:
         return f"</{self.tag}>"
 
-    def _invalid_tag(self) -> bool:
-        return self.tag is None or self.tag == ""
-
     def props_to_html(self) -> str:
-        return ("".join(self._iter_props_to_html())
-                if self.props else ""
-        )
+        return "".join(self._iter_props_to_html()) if self.props else ""
     
-    @classmethod #factory support
-    def _check_props(cls,
-                     protected: set[str],
-                     props_to_check: dict[str, str]
-     ) -> None:
+    @staticmethod #factory support
+    def _check_props(protected: set[str], props_to_check: dict[str, str]) -> None:
         '''Checks for issues and conflicting props keys in factory methods'''
         
         normalised_protected = {prop.lower() for prop in protected}
@@ -86,6 +76,11 @@ class HTMLNode:#(ABC):  #ABC achieves nothing until abstractmethod activated
                 raise errors.HTMLNodePropConflict(prop = prop)
             if not isinstance(props_to_check[prop], str):
                 raise errors.HTMLNodePropTypeError(prop = prop)
+            
+    @staticmethod
+    def _is_missing(attribute : str | None) -> bool:
+        '''Returns true if provided attribute is missing or an empty string'''
+        return (attribute is None or attribute == "")
 
 
 class VoidNode(HTMLNode):
@@ -114,7 +109,7 @@ class VoidNode(HTMLNode):
         '''screens for empty/none inputs
         Used at initialisation time and also at use time
         to meet spec and guard against outside mutation'''
-        if self._invalid_tag():
+        if self._is_missing(self.tag):
             raise errors.HTMLNodeMissingAttributeError(attribute="tag")
         
     def iter_html(self) -> Iterator[str]:
@@ -140,7 +135,7 @@ class VoidNode(HTMLNode):
               other_props: dict[str, str] | None = None
               ) -> VoidNode:
 
-        if source is None or source == "":
+        if cls._is_missing(source):
             raise errors.HTMLNodeMissingAttributeError(attribute = "image source")
         
         props = {"src": source}
@@ -196,7 +191,7 @@ class LeafNode(HTMLNode):
     def iter_html(self) -> Iterator[str]:
         self._validate()
         
-        if self._invalid_tag():
+        if self._is_missing(self.tag):
             yield self._escape_text(self.value)
         else:
             yield from self._open_tag()
@@ -240,10 +235,10 @@ class LeafNode(HTMLNode):
               other_props: dict[str, str] | None = None
               ) -> LeafNode:
 
-        if url is None or url == "":
+        if cls._is_missing(url):
             raise errors.HTMLNodeMissingAttributeError(attribute = "link URL")
         
-        if text is None or text == "":
+        if cls._is_missing(text):
             raise errors.HTMLNodeMissingAttributeError(attribute = "link text")
         
         props = {"href": url}
@@ -274,7 +269,7 @@ class ParentNode(HTMLNode):
         Used at initialisation time and also at use time
         to meet spec and guard against outside mutation'''
 
-        if self._invalid_tag():
+        if self._is_missing(self.tag):
             raise errors.HTMLNodeMissingAttributeError(attribute="tag")
         if not isinstance(self.children, list) or len(self.children) == 0:
             raise errors.HTMLNodeChildrenListError()
