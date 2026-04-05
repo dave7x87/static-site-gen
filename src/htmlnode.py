@@ -235,7 +235,7 @@ class LeafNode(HTMLNode):
               other_props: dict[str, str] | None = None
               ) -> LeafNode:
 
-        if cls._is_missing(url):
+        if url is None:
             raise errors.HTMLNodeMissingAttributeError(attribute = "link URL")
         
         if cls._is_missing(text):

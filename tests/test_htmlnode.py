@@ -311,9 +311,11 @@ class TestLeafNode(unittest.TestCase):
         with self.assertRaises(errors.HTMLNodeMissingAttributeError):
             LeafNode.link(url=None, text="link text")
 
-    def test_link_empty_url(self):
-        with self.assertRaises(errors.HTMLNodeMissingAttributeError):
-            LeafNode.link(url="", text="link text")
+    # test disabled as current policy is to allow empty (but NOT missing urls) as there are legit uses
+    ## may be retuned later to allow to optin to stricter policy
+    #def test_link_empty_url(self):
+    #    with self.assertRaises(errors.HTMLNodeMissingAttributeError):
+    #        LeafNode.link(url="", text="link text")
 
     def test_link_no_text(self):
         with self.assertRaises(errors.HTMLNodeMissingAttributeError):

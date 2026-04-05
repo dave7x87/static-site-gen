@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum
 from dataclasses import dataclass
-from src.htmlnode import LeafNode
+from src.htmlnode import LeafNode, VoidNode
 import src.errors as errors
 
 class TextType(Enum):
@@ -58,36 +58,19 @@ class TextNode:
     def image(cls, text:str, url: str) -> TextNode:
         return cls(text, TextType.IMAGE, url)    
 
-def text_node_to_html_node(text_node: TextNode) -> LeafNode:
+def text_node_to_html_node(text_node: TextNode) -> LeafNode | VoidNode:
     match text_node.text_type:
         case TextType.TEXT | TextType.PLAIN:
-            return LeafNode(tag=None,
-                            value=text_node.text
-                            )
+            return LeafNode.text(text=text_node.text)
         case TextType.BOLD:
-            return LeafNode(tag="b",
-                            value=text_node.text
-                            )
+            return LeafNode.bold(text=text_node.text)
         case TextType.ITALIC:
-            return LeafNode(tag="i",
-                            value=text_node.text
-                            )
+            return LeafNode.italic(text=text_node.text)
         case TextType.CODE:
-            return LeafNode(tag="code",
-                            value=text_node.text
-                            )
+            return LeafNode.code(text=text_node.text)
         case TextType.LINK | TextType.URL:
-            return LeafNode(tag="a",
-                            value=text_node.text,
-                            props={"href": text_node.url}
-                            )
+            return LeafNode.link(url=text_node.url, text=text_node.text)
         case TextType.IMAGE:
-            return  LeafNode(tag="img",
-                            value="",
-                            props={
-                                "src": text_node.url,
-                                "alt": text_node.text,
-                                }
-                                )
+            return  VoidNode.image(source=text_node.url, alt_text=text_node.text)
         case unknown_type:
             raise errors.TextNodeTypeError(text_type=unknown_type)
