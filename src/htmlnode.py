@@ -273,9 +273,16 @@ class ParentNode(HTMLNode):
             raise errors.HTMLNodeMissingAttributeError(attribute="tag")
         if not isinstance(self.children, list) or len(self.children) == 0:
             raise errors.HTMLNodeChildrenListError()
-        bad_children = [child for child in self.children if not isinstance(child, HTMLNode)]
+        bad_children = None
+        for child in self.children:
+            if not isinstance(child, HTMLNode):
+                if bad_children is None:
+                    bad_children = [child]
+                else:
+                    bad_children.append(child)
+
         if bad_children:
-            raise errors.HTMLNodeChildrenTypeError(children = bad_children)
+            raise errors.HTMLNodeChildrenTypeError(children=bad_children)
         
     def iter_html(self) -> Iterator[str]:
         
